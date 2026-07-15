@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "manga-panels"
+version = "0.1.0"
+description = "Corta paginas de manga em paineis e reempacota como CBZ"
+requires-python = ">=3.11"
+dependencies = ["pillow>=10", "numpy>=1.24"]
+
+[project.optional-dependencies]
+cbr = ["rarfile>=4"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+manga-panels = "manga_panels.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/manga_panels"]
