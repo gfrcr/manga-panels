@@ -35,3 +35,15 @@ def test_blank_page_falls_back_to_whole_page(tmp_path):
     out = tmp_path / "blank_panels.cbz"
     n = process_archive(src, out)
     assert n == 1                                  # nunca perde a pagina
+
+
+def test_cli_processes_folder(tmp_path):
+    from manga_panels.cli import main
+    from manga_panels.archive import pack
+    src_dir = tmp_path / "chapters"
+    src_dir.mkdir()
+    pack([_grid_page()], src_dir / "c1.cbz")
+    out_dir = tmp_path / "out"
+    rc = main([str(src_dir), "-o", str(out_dir)])
+    assert rc == 0
+    assert (out_dir / "c1_panels.cbz").exists()

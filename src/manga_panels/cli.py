@@ -1,0 +1,47 @@
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+from manga_panels.pipeline import process_archive
+
+_EXTS = {".cbz", ".cbr", ".zip", ".rar"}
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(
+        prog="manga-panels",
+        description="Corta paginas de manga em paineis e reempacota como CBZ.",
+    )
+    ap.add_argument("input", help="arquivo .cbz/.cbr ou pasta com varios")
+    ap.add_argument("-o", "--output", help="arquivo ou pasta de saida")
+    ap.add_argument("--ltr", action="store_true", help="leitura esquerda->direita")
+    ap.add_argument("--detector", default="xycut", choices=["xycut", "ml"])
+    ap.add_argument("--min-area", type=float, default=0.02,
+                    help="fracao minima da area da pagina por painel (default 0.02)")
+    args = ap.parse_args(argv)
+
+    rtl = not args.ltr
+    src = Path(args.input)
+    kw = dict(detector=args.detector, rtl=rtl, min_frac=args.min_area)
+
+    if src.is_dir():
+        out_dir = Path(args.output) if args.output else src.with_name(src.name + "_panels")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        files = sorted(p for p in src.iterdir() if p.suffix.lower() in _EXTS)
+        if not files:
+            print(f"nenhum arquivo .cbz/.cbr em {src}")
+            return 1
+        for f in files:
+            out = out_dir / f"{f.stem}_panels.cbz"
+            n = process_archive(f, out, **kw)
+            print(f"{f.name}: {n} paineis -> {out.name}")
+        return 0
+
+    if not src.exists():
+        print(f"nao encontrado: {src}")
+        return 1
+    out = Path(args.output) if args.output else src.with_name(f"{src.stem}_panels.cbz")
+    n = process_archive(src, out, **kw)
+    print(f"{src.name}: {n} paineis -> {out}")
+    return 0
