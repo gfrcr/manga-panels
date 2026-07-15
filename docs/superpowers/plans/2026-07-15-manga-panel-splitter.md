@@ -507,10 +507,11 @@ git commit -m "feat: reading-order sort for unordered detectors"
 - Test: `tests/test_pipeline.py`
 
 **Interfaces:**
-- Consumes: `unpack`, `pack` (Task 2); `Box`, `Detector`, `get_detector` (Task 3); `order_boxes` (Task 4).
+- Consumes: `unpack`, `pack` (Task 2); `Box`, `get_detector` (Task 3).
 - Produces:
   - `crop_panels(page: Image.Image, boxes: list[Box]) -> list[Image.Image]`.
   - `process_archive(in_path, out_path, *, detector: str = "xycut", rtl: bool = True, min_frac: float = 0.02) -> int` — roda o pipeline inteiro e retorna o número de painéis escritos. Fallback: página sem painéis detectados vira um painel único (a página toda).
+- **Ordem de leitura:** o pipeline confia na ordem devolvida pelo detector. O `XYCutDetector` já sai em ordem RTL/LTR; o futuro `MLDetector` normaliza internamente via `order_boxes`. O pipeline NÃO chama `order_boxes` (re-ordenar a saída boa do XY-cut com a heurística de linhas seria fonte de bug, sem ganho).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -572,7 +573,6 @@ from PIL import Image
 
 from manga_panels.archive import pack, unpack
 from manga_panels.detect import Box, get_detector
-from manga_panels.order import order_boxes
 
 
 def crop_panels(page: Image.Image, boxes: list[Box]) -> list[Image.Image]:
@@ -585,11 +585,9 @@ def process_archive(in_path, out_path, *, detector: str = "xycut",
     pages = unpack(in_path)
     panels: list[Image.Image] = []
     for page in pages:
-        boxes = det.detect(page)
+        boxes = det.detect(page)                   # ja vem em ordem de leitura
         if not boxes:                              # fallback: pagina inteira
             boxes = [(0, 0, page.width, page.height)]
-        else:
-            boxes = order_boxes(boxes, rtl=rtl)
         panels.extend(crop_panels(page, boxes))
     pack(panels, out_path)
     return len(panels)
