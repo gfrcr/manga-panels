@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import re
 import zipfile
 from pathlib import Path
 
@@ -11,6 +12,10 @@ _IMG_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"}
 
 def _is_image(name: str) -> bool:
     return Path(name).suffix.lower() in _IMG_EXT
+
+
+def _natkey(name: str):
+    return [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", name)]
 
 
 def unpack(path: str | Path) -> list[Image.Image]:
@@ -29,7 +34,7 @@ def _load(data: bytes) -> Image.Image:
 
 def _unpack_zip(path: Path) -> list[Image.Image]:
     with zipfile.ZipFile(path) as z:
-        names = sorted(n for n in z.namelist() if _is_image(n))
+        names = sorted((n for n in z.namelist() if _is_image(n)), key=_natkey)
         return [_load(z.read(n)) for n in names]
 
 
@@ -42,7 +47,7 @@ def _unpack_rar(path: Path) -> list[Image.Image]:
             "e do binario 'unrar' no sistema"
         ) from e
     with rarfile.RarFile(path) as r:
-        names = sorted(n for n in r.namelist() if _is_image(n))
+        names = sorted((n for n in r.namelist() if _is_image(n)), key=_natkey)
         return [_load(r.read(n)) for n in names]
 
 

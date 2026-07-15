@@ -23,6 +23,21 @@ def test_unpack_reads_pages_in_order(tmp_path):
     assert pages[0].mode == "RGB"
 
 
+def test_unpack_natural_sort_non_padded(tmp_path):
+    import zipfile
+    from PIL import Image
+    cbz = tmp_path / "np.cbz"
+    order = [1, 2, 10, 11]           # lexicographic would give 1,10,11,2
+    with zipfile.ZipFile(cbz, "w") as z:
+        for i in order:
+            img = Image.new("RGB", (4, 4), (i, 0, 0))   # red channel = page number
+            p = tmp_path / f"p{i}.png"
+            img.save(p); z.write(p, f"{i}.png"); p.unlink()
+    pages = unpack(cbz)
+    reds = [px.getpixel((0, 0))[0] for px in pages]
+    assert reds == [1, 2, 10, 11]
+
+
 def test_pack_roundtrip(tmp_path):
     imgs = [Image.new("RGB", (8, 8), (0, i * 5, 0)) for i in range(4)]
     out = tmp_path / "out.cbz"
