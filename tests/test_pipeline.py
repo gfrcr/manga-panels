@@ -47,3 +47,39 @@ def test_cli_processes_folder(tmp_path):
     rc = main([str(src_dir), "-o", str(out_dir)])
     assert rc == 0
     assert (out_dir / "c1_panels.cbz").exists()
+
+
+def test_cli_empty_folder_does_not_create_output_dir(tmp_path):
+    from manga_panels.cli import main
+    empty_dir = tmp_path / "chapters"
+    empty_dir.mkdir()
+    out = tmp_path / "out"
+    rc = main([str(empty_dir), "-o", str(out)])
+    assert rc != 0
+    assert not out.exists()
+
+
+def test_cli_same_stem_different_ext_no_overwrite(tmp_path):
+    from manga_panels.cli import main
+    from manga_panels.archive import pack
+    src_dir = tmp_path / "chapters"
+    src_dir.mkdir()
+    pack([_grid_page()], src_dir / "c1.cbz")
+    pack([_grid_page()], src_dir / "c1.zip")
+    out_dir = tmp_path / "out"
+    rc = main([str(src_dir), "-o", str(out_dir)])
+    assert rc == 0
+    outputs = sorted(out_dir.iterdir())
+    assert len(outputs) == 2
+    for f in outputs:
+        assert f.stat().st_size > 0
+        with zipfile.ZipFile(f) as z:
+            assert len(z.namelist()) == 4
+
+
+def test_cli_ml_detector_reports_error_without_raising(tmp_path):
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    rc = main([str(src), "--detector", "ml"])
+    assert rc != 0

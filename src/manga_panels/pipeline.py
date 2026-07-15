@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from PIL import Image
 
 from manga_panels.archive import pack, unpack

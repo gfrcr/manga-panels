@@ -27,21 +27,35 @@ def main(argv: list[str] | None = None) -> int:
 
     if src.is_dir():
         out_dir = Path(args.output) if args.output else src.with_name(src.name + "_panels")
-        out_dir.mkdir(parents=True, exist_ok=True)
         files = sorted(p for p in src.iterdir() if p.suffix.lower() in _EXTS)
         if not files:
             print(f"nenhum arquivo .cbz/.cbr em {src}")
             return 1
+        out_dir.mkdir(parents=True, exist_ok=True)
+        used: set[Path] = set()
+        failed = False
         for f in files:
             out = out_dir / f"{f.stem}_panels.cbz"
-            n = process_archive(f, out, **kw)
+            if out in used:
+                out = out_dir / f"{f.stem}_{f.suffix.lstrip('.')}_panels.cbz"
+            used.add(out)
+            try:
+                n = process_archive(f, out, **kw)
+            except (NotImplementedError, RuntimeError, ValueError) as e:
+                print(f"{f.name}: erro -> {e}")
+                failed = True
+                continue
             print(f"{f.name}: {n} paineis -> {out.name}")
-        return 0
+        return 1 if failed else 0
 
     if not src.exists():
         print(f"nao encontrado: {src}")
         return 1
     out = Path(args.output) if args.output else src.with_name(f"{src.stem}_panels.cbz")
-    n = process_archive(src, out, **kw)
+    try:
+        n = process_archive(src, out, **kw)
+    except (NotImplementedError, RuntimeError, ValueError) as e:
+        print(f"{src.name}: erro -> {e}")
+        return 1
     print(f"{src.name}: {n} paineis -> {out}")
     return 0
