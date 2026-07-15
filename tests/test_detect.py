@@ -26,6 +26,9 @@ def test_reading_order_rtl_top_row_first_and_right_first():
     assert centers[0][1] < 100 and centers[0][0] > 100
     # painel 1 fica em cima e na esquerda
     assert centers[1][1] < 100 and centers[1][0] < 100
+    # painel 2 fica embaixo e na direita; painel 3 embaixo e na esquerda
+    assert centers[2][1] > 100 and centers[2][0] > 100
+    assert centers[3][1] > 100 and centers[3][0] < 100
 
 
 def test_blank_page_returns_empty():
