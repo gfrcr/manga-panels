@@ -9,6 +9,8 @@ por página, pra ler confortável em tela pequena.
 python3 -m venv .venv && .venv/bin/pip install -e .
 # CBR (opcional): precisa do binario 'unrar' no sistema
 .venv/bin/pip install -e ".[cbr]"
+# detector ML (Magi v2, precisa de GPU pra ser rapido)
+uv sync --extra ml        # ou: pip install "manga-panels[ml]"
 ```
 
 ## Usar
@@ -26,6 +28,9 @@ manga-panels capitulo.cbz --ltr
 
 # saida sem perda (arquivos ~3x maiores)
 manga-panels capitulo.cbz --format png
+
+# detector ML — muito melhor em paginas de acao/nao-grid (baixa ~1.5GB no 1o uso)
+manga-panels capitulo.cbz --detector ml
 ```
 
 A saida e sempre um CBZ (zip de imagens); `--format` so muda o encoding das
@@ -44,8 +49,10 @@ sair errado, ajuste:
   estiver sendo picado em pedaços.
 - `--min-area 0.02` — sobe pra descartar painéis-fantasma pequenos; desce se
   painéis legítimos sumirem.
-- Detector: `--detector xycut` (padrão, P&B com sarjeta limpa). `--detector ml`
-  é um stub — layouts sangrados/coloridos ainda não são suportados.
+- Detector: `--detector xycut` (default, leve, bom em grid limpo P&B).
+  `--detector ml` usa o Magi v2 (Manga109) — resolve paginas de acao, sangradas
+  e nao-retangulares que o xycut mescla ou falha. Precisa do extra `[ml]` e de
+  GPU pra rodar rapido; baixa o modelo (~1.5GB) no primeiro uso.
 
 Se um capítulo sai como uma página inteira só mesmo subindo `--max-ink`, ele
 não tinha sarjetas detectáveis: caso pro futuro detector ML.
