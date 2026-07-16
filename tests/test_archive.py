@@ -38,11 +38,36 @@ def test_unpack_natural_sort_non_padded(tmp_path):
     assert reds == [1, 2, 10, 11]
 
 
-def test_pack_roundtrip(tmp_path):
+def test_pack_roundtrip_jpeg_default(tmp_path):
     imgs = [Image.new("RGB", (8, 8), (0, i * 5, 0)) for i in range(4)]
     out = tmp_path / "out.cbz"
-    pack(imgs, out)
+    pack(imgs, out)                      # default = jpeg
     with zipfile.ZipFile(out) as z:
         names = sorted(z.namelist())
-    assert names == ["0001.png", "0002.png", "0003.png", "0004.png"]
+    assert names == ["0001.jpg", "0002.jpg", "0003.jpg", "0004.jpg"]
     assert len(unpack(out)) == 4
+
+
+def test_pack_png_format(tmp_path):
+    imgs = [Image.new("RGB", (8, 8), (0, 0, 0)) for _ in range(2)]
+    out = tmp_path / "out.cbz"
+    pack(imgs, out, fmt="png")
+    with zipfile.ZipFile(out) as z:
+        assert sorted(z.namelist()) == ["0001.png", "0002.png"]
+
+
+def test_jpeg_quality_knob_affects_size(tmp_path):
+    # menor qualidade -> menor arquivo (prova que --quality esta ligado)
+    import numpy as np
+    arr = np.random.default_rng(0).integers(0, 256, (128, 128, 3), dtype="uint8")
+    img = Image.fromarray(arr, "RGB")
+    lo = tmp_path / "lo.cbz"; hi = tmp_path / "hi.cbz"
+    pack([img], lo, fmt="jpeg", quality=30)
+    pack([img], hi, fmt="jpeg", quality=95)
+    assert lo.stat().st_size < hi.stat().st_size
+
+
+def test_pack_bad_format_raises(tmp_path):
+    import pytest
+    with pytest.raises(ValueError):
+        pack([Image.new("RGB", (4, 4))], tmp_path / "x.cbz", fmt="webp")

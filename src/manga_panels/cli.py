@@ -22,12 +22,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-ink", type=float, default=0.08,
                     help="tolerancia de tinta na sarjeta: maior corta mais paineis, "
                          "menor e mais conservador (default 0.08)")
+    ap.add_argument("--format", default="jpeg", choices=["jpeg", "png"],
+                    help="encoding dos paineis no cbz (default jpeg)")
+    ap.add_argument("--quality", type=int, default=90,
+                    help="qualidade jpeg 1-95, maior=maior arquivo (default 90)")
     args = ap.parse_args(argv)
 
     rtl = not args.ltr
     src = Path(args.input)
     kw = dict(detector=args.detector, rtl=rtl, min_frac=args.min_area,
-              max_ink=args.max_ink)
+              max_ink=args.max_ink, fmt=args.format, quality=args.quality)
 
     if src.is_dir():
         out_dir = Path(args.output) if args.output else src.with_name(src.name + "_panels")
