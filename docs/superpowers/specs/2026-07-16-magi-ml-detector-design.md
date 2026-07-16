@@ -41,8 +41,9 @@ MagiDetector.detect(page: PIL.Image) -> list[Box]   # ordem de leitura
   precisa deles.
 - **Modelo singleton:** carrega `magiv2` uma vez (cacheado em nível de módulo),
   reusa em todas as páginas da execução. `torch.no_grad()` na inferência.
-- **Device:** auto — `cuda` se disponível (half precision `.half()` pra caber
-  em 8GB e acelerar), senão `cpu` (float32).
+- **Device:** auto — `cuda` se disponível, senão `cpu`. Roda em fp32 nos dois
+  casos (cabe e funciona em 8GB de VRAM); half precision (`.half()`) fica
+  como otimização futura se a VRAM apertar.
 - **Download:** `transformers`/`huggingface_hub` baixam e cacheiam o modelo no
   1º uso (`~/.cache/huggingface`). Sem passo manual.
 

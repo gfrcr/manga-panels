@@ -3,6 +3,8 @@
 (dentro das funcoes) pra o base install continuar leve."""
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 from PIL import Image
 
@@ -37,13 +39,18 @@ def _load_magi():
         try:
             import torch
             from transformers import AutoModel
+            from transformers.utils import logging as hf_logging
+
+            hf_logging.set_verbosity_error()
         except ImportError as e:
             raise RuntimeError(
                 "detector ml precisa do extra [ml]: uv sync --extra ml "
                 "(ou pip install 'manga-panels[ml]')"
             ) from e
-        model = AutoModel.from_pretrained(_MODEL_NAME, trust_remote_code=True)
-        model = model.to("cuda" if torch.cuda.is_available() else "cpu").eval()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            model = AutoModel.from_pretrained(_MODEL_NAME, trust_remote_code=True)
+            model = model.to("cuda" if torch.cuda.is_available() else "cpu").eval()
         _MODEL = model
     return _MODEL
 

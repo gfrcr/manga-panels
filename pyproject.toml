@@ -35,4 +35,4 @@ packages = ["src/manga_panels"]
 markers = [
     "ml: integracao que precisa do extra [ml] e baixa o modelo Magi (~1.5GB); nao roda por default",
 ]
-addopts = "-m 'not ml'"
+addopts = "-m 'not ml' --strict-markers"

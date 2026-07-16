@@ -55,7 +55,7 @@ sair errado, ajuste:
   GPU pra rodar rapido; baixa o modelo (~1.5GB) no primeiro uso.
 
 Se um capítulo sai como uma página inteira só mesmo subindo `--max-ink`, ele
-não tinha sarjetas detectáveis: caso pro futuro detector ML.
+não tinha sarjetas detectáveis — tente `--detector ml`.
 
 Calibração medida em FMA Vol.01 (176 páginas): default antigo (0.01) dava
 2.3 painéis/página e deixava várias páginas inteiras sem cortar; o default
