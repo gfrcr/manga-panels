@@ -36,6 +36,24 @@ def test_blank_page_returns_empty():
     assert XYCutDetector().detect(blank) == []
 
 
+def _page_with_noisy_gutter():
+    # 2 paineis lado a lado com uma sarjeta vertical "suja": ~3% de tinta
+    # cruzando (simula screentone/onomatopeia). 200x100, gutter x[90..110].
+    arr = np.full((100, 200), 255, np.uint8)
+    arr[10:90, 10:90] = 0          # painel esquerdo
+    arr[10:90, 110:190] = 0        # painel direito
+    arr[45:48, 90:110] = 0         # 3 linhas de tinta na sarjeta -> ~3%/coluna
+    return Image.fromarray(arr, "L").convert("RGB")
+
+
+def test_max_ink_knob_splits_noisy_gutter():
+    page = _page_with_noisy_gutter()
+    # conservador demais (antigo default): a sarjeta suja passa batido -> 1 painel
+    assert len(XYCutDetector(max_ink=0.01).detect(page)) == 1
+    # default calibrado: tolera a intrusao e separa os 2 paineis
+    assert len(XYCutDetector(max_ink=0.08).detect(page)) == 2
+
+
 def test_ml_detector_not_implemented():
     import pytest
     with pytest.raises(NotImplementedError):

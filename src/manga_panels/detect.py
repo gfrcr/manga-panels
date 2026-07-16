@@ -40,12 +40,17 @@ def _content_segments(is_bg: np.ndarray, min_gutter: int) -> list[tuple[int, int
 
 
 class XYCutDetector:
-    def __init__(self, bg_thresh: int = 200, min_gutter: int = 8,
-                 min_frac: float = 0.02, rtl: bool = True) -> None:
+    def __init__(self, bg_thresh: int = 200, min_gutter: int = 5,
+                 min_frac: float = 0.02, rtl: bool = True,
+                 max_ink: float = 0.08) -> None:
         self.bg_thresh = bg_thresh
         self.min_gutter = min_gutter
         self.min_frac = min_frac
         self.rtl = rtl
+        # max_ink: fracao maxima de tinta numa linha/coluna pra ela ainda contar
+        # como sarjeta (fundo). Scans reais tem screentone/baloes/onomatopeia
+        # cruzando a sarjeta; 0.01 (quase-puro-branco) sub-segmenta demais.
+        self.max_ink = max_ink
 
     def detect(self, page: Image.Image) -> list[Box]:
         gray = np.asarray(page.convert("L"))
@@ -61,12 +66,12 @@ class XYCutDetector:
         ink = region < self.bg_thresh          # True onde tem traco
         # fracao de tinta por linha ao longo do eixo de corte
         line_ink = ink.mean(axis=1 - axis)     # axis0 -> por linha(y); axis1 -> por coluna(x)
-        is_bg = line_ink < 0.01
+        is_bg = line_ink < self.max_ink
         segs = _content_segments(is_bg, self.min_gutter)
         if not segs:
             other = 1 - axis
             line_ink = ink.mean(axis=1 - other)
-            segs = _content_segments(line_ink < 0.01, self.min_gutter)
+            segs = _content_segments(line_ink < self.max_ink, self.min_gutter)
             if not segs:
                 if w * h >= min_area and ink.any():
                     out.append((x, y, w, h))
@@ -88,9 +93,10 @@ class MLDetector:
         )
 
 
-def get_detector(name: str, *, rtl: bool = True, min_frac: float = 0.02) -> Detector:
+def get_detector(name: str, *, rtl: bool = True, min_frac: float = 0.02,
+                 max_ink: float = 0.08) -> Detector:
     if name == "xycut":
-        return XYCutDetector(rtl=rtl, min_frac=min_frac)
+        return XYCutDetector(rtl=rtl, min_frac=min_frac, max_ink=max_ink)
     if name == "ml":
         return MLDetector()
     raise ValueError(f"detector desconhecido: {name!r}")

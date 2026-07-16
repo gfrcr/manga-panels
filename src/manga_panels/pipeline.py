@@ -11,8 +11,9 @@ def crop_panels(page: Image.Image, boxes: list[Box]) -> list[Image.Image]:
 
 
 def process_archive(in_path, out_path, *, detector: str = "xycut",
-                    rtl: bool = True, min_frac: float = 0.02) -> int:
-    det = get_detector(detector, rtl=rtl, min_frac=min_frac)
+                    rtl: bool = True, min_frac: float = 0.02,
+                    max_ink: float = 0.08) -> int:
+    det = get_detector(detector, rtl=rtl, min_frac=min_frac, max_ink=max_ink)
     pages = unpack(in_path)
     panels: list[Image.Image] = []
     for page in pages:

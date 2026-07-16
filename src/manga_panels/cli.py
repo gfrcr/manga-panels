@@ -19,11 +19,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--detector", default="xycut", choices=["xycut", "ml"])
     ap.add_argument("--min-area", type=float, default=0.02,
                     help="fracao minima da area da pagina por painel (default 0.02)")
+    ap.add_argument("--max-ink", type=float, default=0.08,
+                    help="tolerancia de tinta na sarjeta: maior corta mais paineis, "
+                         "menor e mais conservador (default 0.08)")
     args = ap.parse_args(argv)
 
     rtl = not args.ltr
     src = Path(args.input)
-    kw = dict(detector=args.detector, rtl=rtl, min_frac=args.min_area)
+    kw = dict(detector=args.detector, rtl=rtl, min_frac=args.min_area,
+              max_ink=args.max_ink)
 
     if src.is_dir():
         out_dir = Path(args.output) if args.output else src.with_name(src.name + "_panels")
