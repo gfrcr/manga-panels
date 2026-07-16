@@ -30,10 +30,19 @@ manga-panels capitulo.cbz --ltr
 Scans reais têm ruído, sarjetas acinzentadas e JPEG artifacts. Se o corte
 sair errado, ajuste:
 
+- `--max-ink 0.08` — o knob mais importante. É quanta tinta uma linha/coluna
+  pode ter e ainda contar como sarjeta. **Sobe** (ex. `0.12`) se páginas
+  ficarem como um painel só ou não separarem painéis lado a lado (screentone
+  ou onomatopeia cruzando a sarjeta). **Desce** (ex. `0.04`) se um painel
+  estiver sendo picado em pedaços.
 - `--min-area 0.02` — sobe pra descartar painéis-fantasma pequenos; desce se
   painéis legítimos sumirem.
 - Detector: `--detector xycut` (padrão, P&B com sarjeta limpa). `--detector ml`
   é um stub — layouts sangrados/coloridos ainda não são suportados.
 
-Se um capítulo sai como uma página inteira só, ele não tinha sarjetas
-detectáveis: caso pro futuro detector ML.
+Se um capítulo sai como uma página inteira só mesmo subindo `--max-ink`, ele
+não tinha sarjetas detectáveis: caso pro futuro detector ML.
+
+Calibração medida em FMA Vol.01 (176 páginas): default antigo (0.01) dava
+2.3 painéis/página e deixava várias páginas inteiras sem cortar; o default
+atual (0.08) dá 3.6/página — densidade realista de mangá.
