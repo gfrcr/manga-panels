@@ -96,8 +96,14 @@ def test_cli_same_stem_different_ext_no_overwrite(tmp_path):
             assert len(z.namelist()) == 5   # pagina cheia + 4 paineis (--page default)
 
 
-def test_cli_ml_detector_reports_error_without_raising(tmp_path):
+def test_cli_ml_detector_reports_error_without_raising(tmp_path, monkeypatch):
     from manga_panels.cli import main
+    import manga_panels.ml as ml
+
+    def _boom():
+        raise RuntimeError("detector ml precisa do extra [ml]: uv sync --extra ml")
+
+    monkeypatch.setattr(ml, "_load_magi", _boom)
     src = tmp_path / "ch.cbz"
     pack([_grid_page()], src)
     rc = main([str(src), "--detector", "ml"])

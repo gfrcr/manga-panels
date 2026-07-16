@@ -86,17 +86,11 @@ class XYCutDetector:
                 self._recurse(gray, x + s, y, e - s, h, 0, min_area, out)
 
 
-class MLDetector:
-    def detect(self, page: Image.Image) -> list[Box]:
-        raise NotImplementedError(
-            "detector ML ainda nao implementado; use --detector xycut"
-        )
-
-
 def get_detector(name: str, *, rtl: bool = True, min_frac: float = 0.02,
                  max_ink: float = 0.08) -> Detector:
     if name == "xycut":
         return XYCutDetector(rtl=rtl, min_frac=min_frac, max_ink=max_ink)
     if name == "ml":
-        return MLDetector()
+        from manga_panels.ml import MagiDetector   # import lazy
+        return MagiDetector()
     raise ValueError(f"detector desconhecido: {name!r}")

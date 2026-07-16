@@ -12,9 +12,27 @@ dependencies = ["pillow>=10", "numpy>=1.24"]
 [project.optional-dependencies]
 cbr = ["rarfile>=4"]
 dev = ["pytest>=8"]
+ml = [
+    "torch>=2.3",
+    "transformers>=4.40,<5",
+    "einops",
+    "matplotlib",
+    "networkx",
+    "pulp",
+    "scipy",
+    "shapely",
+    "sentencepiece",
+    "timm",
+]
 
 [project.scripts]
 manga-panels = "manga_panels.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/manga_panels"]
+
+[tool.pytest.ini_options]
+markers = [
+    "ml: integracao que precisa do extra [ml] e baixa o modelo Magi (~1.5GB); nao roda por default",
+]
+addopts = "-m 'not ml' --strict-markers"
