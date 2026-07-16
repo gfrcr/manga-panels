@@ -14,13 +14,15 @@ cbr = ["rarfile>=4"]
 dev = ["pytest>=8"]
 ml = [
     "torch>=2.3",
-    "transformers>=4.40",
+    "transformers>=4.40,<5",
     "einops",
     "matplotlib",
     "networkx",
     "pulp",
     "scipy",
     "shapely",
+    "sentencepiece",
+    "timm",
 ]
 
 [project.scripts]

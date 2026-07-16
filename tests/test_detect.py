@@ -1,6 +1,6 @@
 import numpy as np
 from PIL import Image
-from manga_panels.detect import XYCutDetector, MLDetector, get_detector
+from manga_panels.detect import XYCutDetector, get_detector
 
 
 def _page_with_grid():
@@ -52,12 +52,6 @@ def test_max_ink_knob_splits_noisy_gutter():
     assert len(XYCutDetector(max_ink=0.01).detect(page)) == 1
     # default calibrado: tolera a intrusao e separa os 2 paineis
     assert len(XYCutDetector(max_ink=0.08).detect(page)) == 2
-
-
-def test_ml_detector_not_implemented():
-    import pytest
-    with pytest.raises(NotImplementedError):
-        MLDetector().detect(Image.new("RGB", (10, 10)))
 
 
 def test_get_detector_returns_xycut():
