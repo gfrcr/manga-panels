@@ -26,12 +26,16 @@ def main(argv: list[str] | None = None) -> int:
                     help="encoding dos paineis no cbz (default jpeg)")
     ap.add_argument("--quality", type=int, default=90,
                     help="qualidade jpeg 1-95, maior=maior arquivo (default 90)")
+    ap.add_argument("--page", action=argparse.BooleanOptionalAction, default=True,
+                    help="incluir a pagina inteira antes dos paineis, visao macro "
+                         "(default sim; use --no-page pra so os paineis)")
     args = ap.parse_args(argv)
 
     rtl = not args.ltr
     src = Path(args.input)
     kw = dict(detector=args.detector, rtl=rtl, min_frac=args.min_area,
-              max_ink=args.max_ink, fmt=args.format, quality=args.quality)
+              max_ink=args.max_ink, fmt=args.format, quality=args.quality,
+              include_page=args.page)
 
     if src.is_dir():
         out_dir = Path(args.output) if args.output else src.with_name(src.name + "_panels")
@@ -53,7 +57,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{f.name}: erro -> {e}")
                 failed = True
                 continue
-            print(f"{f.name}: {n} paineis -> {out.name}")
+            print(f"{f.name}: {n} imagens -> {out.name}")
         return 1 if failed else 0
 
     if not src.exists():
@@ -65,5 +69,5 @@ def main(argv: list[str] | None = None) -> int:
     except (NotImplementedError, RuntimeError, ValueError) as e:
         print(f"{src.name}: erro -> {e}")
         return 1
-    print(f"{src.name}: {n} paineis -> {out}")
+    print(f"{src.name}: {n} imagens -> {out}")
     return 0
