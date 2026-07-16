@@ -23,7 +23,14 @@ manga-panels ./capitulos -o ./saida
 
 # manga ocidental (esquerda->direita)
 manga-panels capitulo.cbz --ltr
+
+# saida sem perda (arquivos ~3x maiores)
+manga-panels capitulo.cbz --format png
 ```
+
+A saida e sempre um CBZ (zip de imagens); `--format` so muda o encoding das
+imagens dentro dele. Default e JPEG q90 (~1x o tamanho da fonte); PNG e
+sem perda mas ~3x maior. Ajuste com `--quality 1..95`.
 
 ## Calibração
 

@@ -51,11 +51,22 @@ def _unpack_rar(path: Path) -> list[Image.Image]:
         return [_load(r.read(n)) for n in names]
 
 
-def pack(images: list[Image.Image], out_path: str | Path) -> None:
+def pack(images: list[Image.Image], out_path: str | Path, *,
+         fmt: str = "jpeg", quality: int = 90) -> None:
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as z:
+    fmt = fmt.lower()
+    if fmt in ("jpg", "jpeg"):
+        # jpeg ja e comprimido: STORED evita recompressao inutil no zip
+        ext, pil_fmt, save_kw, compression = (
+            "jpg", "JPEG", {"quality": quality}, zipfile.ZIP_STORED)
+    elif fmt == "png":
+        ext, pil_fmt, save_kw, compression = (
+            "png", "PNG", {}, zipfile.ZIP_DEFLATED)
+    else:
+        raise ValueError(f"formato de imagem desconhecido: {fmt!r}")
+    with zipfile.ZipFile(out_path, "w", compression) as z:
         for i, img in enumerate(images, start=1):
             buf = io.BytesIO()
-            img.save(buf, format="PNG")
-            z.writestr(f"{i:04d}.png", buf.getvalue())
+            img.save(buf, pil_fmt, **save_kw)
+            z.writestr(f"{i:04d}.{ext}", buf.getvalue())
