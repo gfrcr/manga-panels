@@ -52,7 +52,7 @@ def _unpack_rar(path: Path) -> list[Image.Image]:
 
 
 def pack(images: list[Image.Image], out_path: str | Path, *,
-         fmt: str = "jpeg", quality: int = 90) -> None:
+         fmt: str = "jpeg", quality: int = 90, max_width: int | None = None) -> None:
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fmt = fmt.lower()
@@ -67,6 +67,9 @@ def pack(images: list[Image.Image], out_path: str | Path, *,
         raise ValueError(f"formato de imagem desconhecido: {fmt!r}")
     with zipfile.ZipFile(out_path, "w", compression) as z:
         for i, img in enumerate(images, start=1):
+            if max_width and img.width > max_width:   # so reduz, nunca amplia
+                h = round(img.height * max_width / img.width)
+                img = img.resize((max_width, h), Image.LANCZOS)
             buf = io.BytesIO()
             img.save(buf, pil_fmt, **save_kw)
             z.writestr(f"{i:04d}.{ext}", buf.getvalue())
