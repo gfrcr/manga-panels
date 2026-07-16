@@ -37,6 +37,17 @@ A saida e sempre um CBZ (zip de imagens); `--format` so muda o encoding das
 imagens dentro dele. Default e JPEG q90 (~1x o tamanho da fonte); PNG e
 sem perda mas ~3x maior. Ajuste com `--quality 1..95`.
 
+Scans de alta resolucao (ex. edicoes deluxe a 1600px+) geram arquivos grandes.
+Pra ler no celular, reduza com `--max-width`:
+
+```bash
+manga-panels capitulo.cbz --detector ml --max-width 1200
+```
+
+`--max-width N` reduz qualquer imagem mais larga que N px (mantendo proporcao,
+nunca amplia) — corta bastante o tamanho sem perda de leitura numa tela de
+celular. Sem `--max-width`, mantem a resolucao original.
+
 ## Calibração
 
 Scans reais têm ruído, sarjetas acinzentadas e JPEG artifacts. Se o corte

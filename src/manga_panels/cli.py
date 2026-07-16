@@ -29,13 +29,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--page", action=argparse.BooleanOptionalAction, default=True,
                     help="incluir a pagina inteira antes dos paineis, visao macro "
                          "(default sim; use --no-page pra so os paineis)")
+    ap.add_argument("--max-width", type=int, default=None,
+                    help="reduz imagens mais largas que N px (mantem proporcao, "
+                         "nunca amplia); ex. 1200 pra tela de celular. Default: sem limite")
     args = ap.parse_args(argv)
 
     rtl = not args.ltr
     src = Path(args.input)
     kw = dict(detector=args.detector, rtl=rtl, min_frac=args.min_area,
               max_ink=args.max_ink, fmt=args.format, quality=args.quality,
-              include_page=args.page)
+              include_page=args.page, max_width=args.max_width)
 
     if src.is_dir():
         out_dir = Path(args.output) if args.output else src.with_name(src.name + "_panels")

@@ -71,3 +71,24 @@ def test_pack_bad_format_raises(tmp_path):
     import pytest
     with pytest.raises(ValueError):
         pack([Image.new("RGB", (4, 4))], tmp_path / "x.cbz", fmt="webp")
+
+
+def test_pack_max_width_downscales_wide(tmp_path):
+    wide = Image.new("RGB", (2000, 1000), (10, 20, 30))
+    out = tmp_path / "o.cbz"
+    pack([wide], out, max_width=800)
+    assert unpack(out)[0].size == (800, 400)      # proporcao mantida
+
+
+def test_pack_max_width_leaves_narrow_untouched(tmp_path):
+    narrow = Image.new("RGB", (500, 900), (0, 0, 0))
+    out = tmp_path / "o.cbz"
+    pack([narrow], out, max_width=800)
+    assert unpack(out)[0].size == (500, 900)      # nunca amplia
+
+
+def test_pack_max_width_none_keeps_size(tmp_path):
+    im = Image.new("RGB", (2000, 1000), (0, 0, 0))
+    out = tmp_path / "o.cbz"
+    pack([im], out)                                # default = sem limite
+    assert unpack(out)[0].size == (2000, 1000)
