@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 
 from rich.console import Console
+from rich.markup import escape
 from rich.progress import (BarColumn, MofNCompleteColumn, Progress, SpinnerColumn,
                            TextColumn, TimeElapsedColumn)
 from rich.table import Table
@@ -85,7 +86,7 @@ def _summary(rows) -> Table:
     t.add_column("Tamanho", justify="right")
     t.add_column("Status", justify="center")
     for name, n, size, ok in rows:
-        t.add_row(name, str(n) if ok else "-",
+        t.add_row(escape(name), str(n) if ok else "-",
                   f"{size / 1e6:.0f} MB" if size else "-",
                   "[green]OK[/]" if ok else "[red]FALHA[/]")
     return t
@@ -98,9 +99,9 @@ def main(argv: list[str] | None = None) -> int:
     cfg_arg, _ = pre.parse_known_args(argv)
     ap = _build_parser()
     try:
-        cfg = load_config(cfg_arg.config, warn=lambda m: console.print(f"[yellow]{m}[/]"))
+        cfg = load_config(cfg_arg.config, warn=lambda m: console.print(f"[yellow]{escape(m)}[/]"))
     except MangaPanelsError as e:
-        console.print(f"[red]erro:[/] {e}")
+        console.print(f"[red]erro:[/] {escape(str(e))}")
         return 1
     ap.set_defaults(**cfg)             # config < flag da CLI
     args = ap.parse_args(argv)
@@ -117,7 +118,7 @@ def main(argv: list[str] | None = None) -> int:
 
     jobs, err = _jobs(Path(args.input), args.output, suffix)
     if err:
-        console.print(f"[red]{err}[/]")
+        console.print(f"[red]{escape(err)}[/]")
         return 1
 
     if args.detector == "ml":          # spinner enquanto carrega o modelo
@@ -125,7 +126,7 @@ def main(argv: list[str] | None = None) -> int:
             with console.status("[cyan]carregando modelo Magi (1o uso baixa ~1.5GB)..."):
                 get_detector("ml").warmup()
         except MangaPanelsError as e:
-            console.print(f"[red]erro:[/] {e}")
+            console.print(f"[red]erro:[/] {escape(str(e))}")
             return 1
 
     rows, failed = [], False
@@ -133,7 +134,7 @@ def main(argv: list[str] | None = None) -> int:
                   MofNCompleteColumn(), TimeElapsedColumn(), console=console) as progress:
         overall = progress.add_task("volumes", total=len(jobs)) if len(jobs) > 1 else None
         for in_path, out in jobs:
-            task = progress.add_task(in_path.name, total=None)
+            task = progress.add_task(escape(in_path.name), total=None)
 
             def on_page(done, total, _t=task):
                 progress.update(_t, completed=done, total=total)
@@ -142,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
                 n = run(in_path, out, on_page=on_page, **kw)
                 rows.append((in_path.name, n, out.stat().st_size, True))
             except (MangaPanelsError, ValueError) as e:
-                progress.console.print(f"[red]FALHA[/] {in_path.name}: {e}")
+                progress.console.print(f"[red]FALHA[/] {escape(in_path.name)}: {escape(str(e))}")
                 rows.append((in_path.name, 0, 0, False))
                 failed = True
             progress.remove_task(task)

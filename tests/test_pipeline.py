@@ -138,6 +138,20 @@ def test_cli_same_stem_different_ext_no_overwrite(tmp_path):
             assert len(z.namelist()) == 5   # pagina cheia + 4 paineis (--page default)
 
 
+def test_cli_bracket_filename_does_not_crash(tmp_path):
+    # nomes de manga real usam colchetes ([c01], [web]); "/" nunca aparece num nome de
+    # arquivo (e separador de path no SO), entao a tag de fechamento do Rich ([/x]) so
+    # chega intacta via outro sink nao-filesystem: uma chave desconhecida no config toml.
+    from manga_panels.cli import main
+    src = tmp_path / "capitulo [c01] [web].cbz"   # colchetes parecem markup do Rich
+    pack([_grid_page()], src)
+    cfg = tmp_path / "manga-panels.toml"
+    cfg.write_text('[defaults]\n"weird [c01] [/x]" = true\n')  # chave desconhecida -> warn()
+    rc = main([str(src), "--config", str(cfg)])   # nao pode levantar MarkupError
+    assert rc == 0
+    assert (tmp_path / "capitulo [c01] [web]_panels.cbz").exists()
+
+
 def test_cli_ml_detector_reports_error_without_raising(tmp_path, monkeypatch):
     from manga_panels.cli import main
     import manga_panels.ml as ml

@@ -83,7 +83,7 @@ emitida uma vez só (sem duplicar a macro).
   detector** — não re-ordena.
 - **Imports de torch/transformers são SEMPRE lazy** (dentro de função), só em `ml.py`.
   O base install (só xycut) nunca precisa de torch. Se `[ml]` faltar, `--detector ml`
-  levanta `RuntimeError` claro ("uv sync --extra ml").
+  levanta `MissingDependency` claro ("uv sync --extra ml").
 - Sem OpenCV (não tem wheel pra Python 3.14; o XY-cut é numpy puro).
 - Python 3.14; toda dependência precisa de wheel cp314.
 - Extra `[ml]` pin: `transformers>=4.40,<5` (o 5.x tem regressão no tokenizer TrOCR
