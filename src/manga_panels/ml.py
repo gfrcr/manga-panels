@@ -60,7 +60,7 @@ class MagiDetector:
     """Detector ML. detect() devolve paineis em ordem de leitura (do proprio Magi)."""
 
     def detect(self, page: Image.Image) -> list[Box]:
-        model = _load_magi()                 # RuntimeError claro se [ml] ausente
+        model = _load_magi()                 # MissingDependency claro se [ml] ausente
         import torch
         arr = np.array(page.convert("L").convert("RGB"))
         with torch.no_grad():

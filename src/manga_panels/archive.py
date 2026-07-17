@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import re
 import zipfile
+import zlib
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
@@ -33,7 +34,7 @@ def unpack(path: str | Path) -> list[Image.Image]:
 def _load(data: bytes) -> Image.Image:
     try:
         return Image.open(io.BytesIO(data)).convert("RGB")
-    except UnidentifiedImageError as e:
+    except (UnidentifiedImageError, OSError) as e:
         raise BadArchive(f"imagem invalida no arquivo: {e}") from e
 
 
@@ -42,7 +43,7 @@ def _unpack_zip(path: Path) -> list[Image.Image]:
         with zipfile.ZipFile(path) as z:
             names = sorted((n for n in z.namelist() if _is_image(n)), key=_natkey)
             imgs = [_load(z.read(n)) for n in names]
-    except zipfile.BadZipFile as e:
+    except (zipfile.BadZipFile, zlib.error, RuntimeError, OSError, EOFError) as e:
         raise BadArchive(f"cbz/zip corrompido: {path.name}") from e
     if not imgs:
         raise EmptyArchive(f"nenhuma imagem em {path.name}")
@@ -61,7 +62,7 @@ def _unpack_rar(path: Path) -> list[Image.Image]:
         with rarfile.RarFile(path) as r:
             names = sorted((n for n in r.namelist() if _is_image(n)), key=_natkey)
             imgs = [_load(r.read(n)) for n in names]
-    except rarfile.Error as e:
+    except (rarfile.Error, zlib.error, RuntimeError, OSError, EOFError) as e:
         raise BadArchive(f"cbr/rar corrompido: {path.name}") from e
     if not imgs:
         raise EmptyArchive(f"nenhuma imagem em {path.name}")

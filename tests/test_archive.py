@@ -111,3 +111,19 @@ def test_unpack_corrupt_archive_raises(tmp_path):
     cbz.write_bytes(b"nao sou um zip")
     with pytest.raises(BadArchive):
         unpack(cbz)
+
+
+def test_unpack_corrupt_entry_data_raises(tmp_path):
+    import io, pytest, zipfile
+    from PIL import Image
+    from manga_panels.errors import BadArchive
+    cbz = tmp_path / "corrupt_entry.cbz"
+    buf = io.BytesIO(); Image.new("RGB", (20, 20), (200, 0, 0)).save(buf, "PNG")
+    with zipfile.ZipFile(cbz, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("0001.png", buf.getvalue())
+    data = bytearray(cbz.read_bytes())
+    for i in range(50, 90):            # corrompe o meio do stream deflate
+        data[i] ^= 0xFF
+    cbz.write_bytes(data)
+    with pytest.raises(BadArchive):    # zlib.error embrulhado, nao traceback cru
+        unpack(cbz)
