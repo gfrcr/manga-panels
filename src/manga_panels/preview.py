@@ -2,6 +2,8 @@
 pra calibrar antes de processar o volume."""
 from __future__ import annotations
 
+from typing import Callable
+
 from PIL import Image, ImageDraw, ImageFont
 
 from manga_panels.archive import pack, unpack
@@ -38,7 +40,7 @@ def annotate_page(page: Image.Image, boxes: list[Box]) -> Image.Image:
 
 def preview_archive(in_path, out_path, *, detector: str = "xycut", rtl: bool = True,
                     min_frac: float = 0.02, max_ink: float = 0.08, fmt: str = "jpeg",
-                    quality: int = 90, max_width: int | None = None, on_page=None) -> int:
+                    quality: int = 90, max_width: int | None = None, on_page: Callable[[int, int], None] | None = None) -> int:
     det = get_detector(detector, rtl=rtl, min_frac=min_frac, max_ink=max_ink)
     pages = unpack(in_path)
     total = len(pages)

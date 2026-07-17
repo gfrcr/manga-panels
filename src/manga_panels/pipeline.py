@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Callable
+
 from PIL import Image
 
 from manga_panels.archive import pack, unpack
@@ -15,7 +17,7 @@ def process_archive(in_path, out_path, *, detector: str = "xycut",
                     max_ink: float = 0.08, fmt: str = "jpeg",
                     quality: int = 90, page_pos: str = "before",
                     max_width: int | None = None, keep_first: int = 0,
-                    on_page=None) -> int:
+                    on_page: Callable[[int, int], None] | None = None) -> int:
     """Explode cada pagina em paineis num CBZ novo. Retorna o total de imagens
     escritas.
     - keep_first: as primeiras N paginas ficam inteiras (capa/miolo inicial).
