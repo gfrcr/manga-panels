@@ -31,6 +31,12 @@ manga-panels capitulo.cbz --format png
 
 # detector ML — muito melhor em paginas de acao/nao-grid (baixa ~1.5GB no 1o uso)
 manga-panels capitulo.cbz --detector ml
+
+# preview: confere os cortes antes de processar (gera capitulo_preview.cbz)
+manga-panels capitulo.cbz --detector ml --preview
+
+# mantem as 2 primeiras paginas inteiras (capa/folha de rosto) e macro depois dos paineis
+manga-panels capitulo.cbz -k 2 --page after
 ```
 
 A saida e sempre um CBZ (zip de imagens); `--format` so muda o encoding das
@@ -64,6 +70,11 @@ sair errado, ajuste:
   `--detector ml` usa o Magi v2 (Manga109) — resolve paginas de acao, sangradas
   e nao-retangulares que o xycut mescla ou falha. Precisa do extra `[ml]` e de
   GPU pra rodar rapido; baixa o modelo (~1.5GB) no primeiro uso.
+- `--preview` gera um CBZ com os paineis desenhados e numerados (ordem de
+  leitura) em vez de cortar — abra no leitor pra conferir antes do volume todo.
+- `--keep-first N` mantem as primeiras N paginas inteiras (capa/miolo). Capas e
+  splashes ja saem inteiras sozinhas (detector devolve <=1 painel).
+- `--page before|after|off` controla onde a pagina-macro entra.
 
 Se um capítulo sai como uma página inteira só mesmo subindo `--max-ink`, ele
 não tinha sarjetas detectáveis — tente `--detector ml`.

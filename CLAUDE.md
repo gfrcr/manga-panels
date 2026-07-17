@@ -35,7 +35,8 @@ Um arquivo por responsabilidade em `src/manga_panels/`:
 
 **Fluxo por página:** `detect()` devolve painéis já em ordem de leitura → se vazio,
 fallback pra página inteira (nunca perde conteúdo) → com `--page` (default), a
-página inteira vem antes dos painéis (visão macro).
+página inteira vem antes dos painéis (visão macro). Página com ≤1 painel (capa/splash) é
+emitida uma vez só (sem duplicar a macro).
 
 ## Detectores (`--detector`)
 
@@ -53,14 +54,16 @@ página inteira vem antes dos painéis (visão macro).
 | Flag | Default | O que faz |
 |---|---|---|
 | `-o, --output` | `<stem>_panels.cbz` | arquivo ou pasta de saída |
-| `--ltr` | off (RTL) | leitura esquerda→direita (manga é RTL por padrão) |
-| `--detector {xycut,ml}` | `xycut` | detector de painel |
-| `--min-area FLOAT` | `0.02` | fração mínima da área da página por painel (filtro anti-fantasma) |
-| `--max-ink FLOAT` | `0.08` | (xycut) tolerância de tinta na sarjeta. Sobe se páginas não separam; desce se pica demais |
-| `--format {jpeg,png}` | `jpeg` | encoding das imagens dentro do CBZ (a saída é sempre CBZ) |
-| `--quality INT` | `90` | qualidade JPEG 1-95 |
-| `--page / --no-page` | `--page` | incluir a página inteira antes dos painéis (macro) |
-| `--max-width INT` | sem limite | reduz imagens mais largas que N px (mantém proporção, nunca amplia); ex. 1264 pro Paperwhite |
+| `--ltr` | off (RTL) | leitura esquerda→direita |
+| `-d, --detector {xycut,ml}` | `xycut` | detector de painel |
+| `--min-area FLOAT` | `0.02` | fração mínima da área por painel |
+| `--max-ink FLOAT` | `0.08` | (xycut) tolerância de sarjeta |
+| `-f, --format {jpeg,png}` | `jpeg` | encoding no CBZ |
+| `-q, --quality INT` | `90` | qualidade JPEG |
+| `-w, --max-width INT` | sem limite | reduz largura (ex. 1264) |
+| `--page {before,after,off}` | `before` | posição da página-macro |
+| `-k, --keep-first INT` | `0` | mantém as primeiras N páginas inteiras |
+| `--preview` | off | gera `<stem>_preview.cbz` anotado, sem cortar |
 
 ## Convenções (importantes ao editar)
 
