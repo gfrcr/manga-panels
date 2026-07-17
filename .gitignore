@@ -4,3 +4,11 @@ __pycache__/
 *.egg-info/
 # config pessoal (caminhos locais); não versionar
 manga-panels.toml
+
+# IA / assistentes / planejamento — não versionar
+CLAUDE.md
+.claude/
+AGENTS.md
+GEMINI.md
+.superpowers/
+docs/
