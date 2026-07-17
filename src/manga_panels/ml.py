@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image
 
 from manga_panels.detect import Box
+from manga_panels.errors import MissingDependency
 
 _MODEL_NAME = "ragavsachdeva/magiv2"
 _MODEL = None  # singleton carregado sob demanda
@@ -43,7 +44,7 @@ def _load_magi():
 
             hf_logging.set_verbosity_error()
         except ImportError as e:
-            raise RuntimeError(
+            raise MissingDependency(
                 "detector ml precisa do extra [ml]: uv sync --extra ml "
                 "(ou pip install 'manga-panels[ml]')"
             ) from e
@@ -59,9 +60,12 @@ class MagiDetector:
     """Detector ML. detect() devolve paineis em ordem de leitura (do proprio Magi)."""
 
     def detect(self, page: Image.Image) -> list[Box]:
-        model = _load_magi()                 # RuntimeError claro se [ml] ausente
+        model = _load_magi()                 # MissingDependency claro se [ml] ausente
         import torch
         arr = np.array(page.convert("L").convert("RGB"))
         with torch.no_grad():
             results = model.predict_detections_and_associations([arr])
         return _panels_to_boxes(results[0]["panels"], page.width, page.height)
+
+    def warmup(self) -> None:
+        _load_magi()                  # carrega o singleton (spinner no CLI)

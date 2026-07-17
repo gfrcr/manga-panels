@@ -13,6 +13,13 @@ python3 -m venv .venv && .venv/bin/pip install -e .
 uv sync --extra ml        # ou: pip install "manga-panels[ml]"
 ```
 
+Ou rodar como ferramenta sem sujar o ambiente (uv):
+
+```bash
+uv tool install .            # instala o comando `manga-panels`
+uvx --from . manga-panels --help   # ou rodar sem instalar
+```
+
 ## Usar
 
 ```bash
@@ -82,3 +89,19 @@ não tinha sarjetas detectáveis — tente `--detector ml`.
 Calibração medida em FMA Vol.01 (176 páginas): default antigo (0.01) dava
 2.3 painéis/página e deixava várias páginas inteiras sem cortar; o default
 atual (0.08) dá 3.6/página — densidade realista de mangá.
+
+## Config (opcional)
+
+Pra não repetir flags, crie um `manga-panels.toml` (na pasta atual ou em
+`~/.config/manga-panels/config.toml`):
+
+```toml
+[defaults]
+detector = "ml"
+max_width = 1264
+quality = 85
+page = "before"
+```
+
+As chaves são os nomes das flags (`max_width`, `keep_first`, …). Uma flag na
+linha de comando sempre vence o config. Ou aponte um arquivo com `--config`.

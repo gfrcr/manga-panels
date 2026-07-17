@@ -3,9 +3,12 @@ from __future__ import annotations
 import io
 import re
 import zipfile
+import zlib
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
+
+from manga_panels.errors import BadArchive, EmptyArchive, MissingDependency
 
 _IMG_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"}
 
@@ -29,26 +32,41 @@ def unpack(path: str | Path) -> list[Image.Image]:
 
 
 def _load(data: bytes) -> Image.Image:
-    return Image.open(io.BytesIO(data)).convert("RGB")
+    try:
+        return Image.open(io.BytesIO(data)).convert("RGB")
+    except (UnidentifiedImageError, OSError) as e:
+        raise BadArchive(f"imagem invalida no arquivo: {e}") from e
 
 
 def _unpack_zip(path: Path) -> list[Image.Image]:
-    with zipfile.ZipFile(path) as z:
-        names = sorted((n for n in z.namelist() if _is_image(n)), key=_natkey)
-        return [_load(z.read(n)) for n in names]
+    try:
+        with zipfile.ZipFile(path) as z:
+            names = sorted((n for n in z.namelist() if _is_image(n)), key=_natkey)
+            imgs = [_load(z.read(n)) for n in names]
+    except (zipfile.BadZipFile, zlib.error, RuntimeError, OSError, EOFError) as e:
+        raise BadArchive(f"cbz/zip corrompido: {path.name}") from e
+    if not imgs:
+        raise EmptyArchive(f"nenhuma imagem em {path.name}")
+    return imgs
 
 
 def _unpack_rar(path: Path) -> list[Image.Image]:
     try:
         import rarfile
     except ImportError as e:
-        raise RuntimeError(
+        raise MissingDependency(
             "CBR precisa do extra 'cbr': pip install 'manga-panels[cbr]' "
             "e do binario 'unrar' no sistema"
         ) from e
-    with rarfile.RarFile(path) as r:
-        names = sorted((n for n in r.namelist() if _is_image(n)), key=_natkey)
-        return [_load(r.read(n)) for n in names]
+    try:
+        with rarfile.RarFile(path) as r:
+            names = sorted((n for n in r.namelist() if _is_image(n)), key=_natkey)
+            imgs = [_load(r.read(n)) for n in names]
+    except (rarfile.Error, zlib.error, RuntimeError, OSError, EOFError) as e:
+        raise BadArchive(f"cbr/rar corrompido: {path.name}") from e
+    if not imgs:
+        raise EmptyArchive(f"nenhuma imagem em {path.name}")
+    return imgs
 
 
 def pack(images: list[Image.Image], out_path: str | Path, *,

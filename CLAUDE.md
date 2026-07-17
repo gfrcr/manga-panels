@@ -54,6 +54,7 @@ emitida uma vez só (sem duplicar a macro).
 | Flag | Default | O que faz |
 |---|---|---|
 | `-o, --output` | `<stem>_panels.cbz` | arquivo ou pasta de saída |
+| `--config PATH` | `./manga-panels.toml` | TOML `[defaults]` (flag da CLI vence) |
 | `--ltr` | off (RTL) | leitura esquerda→direita |
 | `-d, --detector {xycut,ml}` | `xycut` | detector de painel |
 | `--min-area FLOAT` | `0.02` | fração mínima da área por painel |
@@ -65,6 +66,16 @@ emitida uma vez só (sem duplicar a macro).
 | `-k, --keep-first INT` | `0` | mantém as primeiras N páginas inteiras |
 | `--preview` | off | gera `<stem>_preview.cbz` anotado, sem cortar |
 
+## Saída e erros
+
+- CLI usa **Rich**: barra de progresso (volume + página), spinner no load do
+  modelo ML, tabela-resumo no fim. `rich`/`rich-argparse` são deps base.
+- Falhas conhecidas levantam `MangaPanelsError` (`errors.py`): `EmptyArchive`,
+  `BadArchive`, `MissingDependency`. O CLI captura, imprime a mensagem, e no
+  batch segue pros próximos (exit ≠0 se algum falhou).
+- Config: `config.py::load_config` lê `manga-panels.toml [defaults]` (chaves =
+  dest do argparse); aplicado via `ap.set_defaults` antes do parse.
+
 ## Convenções (importantes ao editar)
 
 - **`Box = tuple[int, int, int, int]` = `(x, y, w, h)`** em pixels, em todo lugar.
@@ -72,7 +83,7 @@ emitida uma vez só (sem duplicar a macro).
   detector** — não re-ordena.
 - **Imports de torch/transformers são SEMPRE lazy** (dentro de função), só em `ml.py`.
   O base install (só xycut) nunca precisa de torch. Se `[ml]` faltar, `--detector ml`
-  levanta `RuntimeError` claro ("uv sync --extra ml").
+  levanta `MissingDependency` claro ("uv sync --extra ml").
 - Sem OpenCV (não tem wheel pra Python 3.14; o XY-cut é numpy puro).
 - Python 3.14; toda dependência precisa de wheel cp314.
 - Extra `[ml]` pin: `transformers>=4.40,<5` (o 5.x tem regressão no tokenizer TrOCR

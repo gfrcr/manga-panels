@@ -7,7 +7,7 @@ name = "manga-panels"
 version = "0.1.0"
 description = "Corta paginas de manga em paineis e reempacota como CBZ"
 requires-python = ">=3.11"
-dependencies = ["pillow>=10", "numpy>=1.24"]
+dependencies = ["pillow>=10", "numpy>=1.24", "rich>=13", "rich-argparse>=1.5"]
 
 [project.optional-dependencies]
 cbr = ["rarfile>=4"]

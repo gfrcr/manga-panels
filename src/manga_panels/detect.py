@@ -11,6 +11,7 @@ Box = tuple[int, int, int, int]  # (x, y, w, h)
 @runtime_checkable
 class Detector(Protocol):
     def detect(self, page: Image.Image) -> list[Box]: ...
+    def warmup(self) -> None: ...
 
 
 def _content_segments(is_bg: np.ndarray, min_gutter: int) -> list[tuple[int, int]]:
@@ -84,6 +85,9 @@ class XYCutDetector:
                 self._recurse(gray, x, y + s, w, e - s, 1, min_area, out)
             else:
                 self._recurse(gray, x + s, y, e - s, h, 0, min_area, out)
+
+    def warmup(self) -> None:
+        pass                          # xycut nao carrega nada
 
 
 def get_detector(name: str, *, rtl: bool = True, min_frac: float = 0.02,

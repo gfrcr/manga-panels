@@ -26,10 +26,11 @@ def test_get_detector_ml_returns_magidetector():
     assert isinstance(get_detector("ml"), ml.MagiDetector)
 
 
-def test_load_magi_missing_deps_raises_runtimeerror(monkeypatch):
+def test_load_magi_missing_deps_raises_missing_dependency(monkeypatch):
+    from manga_panels.errors import MissingDependency
     ml._MODEL = None
     monkeypatch.setitem(sys.modules, "torch", None)   # import torch -> ImportError
-    with pytest.raises(RuntimeError, match="uv sync --extra ml"):
+    with pytest.raises(MissingDependency, match="uv sync --extra ml"):
         ml._load_magi()
 
 
