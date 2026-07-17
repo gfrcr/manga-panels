@@ -1,0 +1,54 @@
+# manga-panels — exemplo de configuração.
+#
+# Copie pra `manga-panels.toml` (na pasta de onde você roda o comando) ou pra
+# `~/.config/manga-panels/config.toml`, e ajuste. As chaves são os nomes das
+# flags (`--max-width` -> `max_width`); qualquer flag na linha de comando sempre
+# vence o config. Descomente só o que você quer mudar — tudo tem default.
+
+[defaults]
+
+# Pasta pra escanear quando você roda `manga-panels` SEM input: abre um menu
+# numerado pra navegar as subpastas e escolher os arquivos.
+# library = "/caminho/para/seus/mangas"
+
+# Detector de painel:
+#   "xycut" (default) — leve, sem GPU, bom em grid P&B limpo.
+#   "ml"              — Magi v2; resolve páginas de ação/sangradas. Precisa do
+#                       extra [ml] e de GPU; baixa ~1.5GB no 1º uso.
+detector = "xycut"
+
+# Encoding das imagens dentro do cbz: "jpeg" (menor) ou "png" (sem perda, ~3x maior).
+format = "jpeg"
+quality = 90            # qualidade jpeg, 1..95 (só vale pra jpeg)
+
+# Reduz imagens mais largas que N px (mantém proporção, nunca amplia).
+# Ex.: 1264 = nativo do Kindle Paperwhite. Sem isso, mantém a resolução original.
+# max_width = 1264
+
+# Página-macro (a página inteira, pra ver o contexto antes dos painéis):
+#   "before" (default), "after" ou "off".
+page = "before"
+
+# Mantém as primeiras N páginas inteiras (capa/folha de rosto), sem cortar.
+keep_first = 0
+
+# Leitura esquerda->direita (mangá ocidental). Default é RTL (direita->esquerda).
+ltr = false
+
+# Calibração do xycut (ignorado no detector ml):
+max_ink = 0.08          # tolerância de tinta na sarjeta; sobe se junta painéis,
+                        # desce se um painel é picado em pedaços.
+min_area = 0.02         # fração mínima da área da página pra algo contar como painel.
+
+# Texto adicionado ao nome de saída (default "_panels" -> capitulo_panels.cbz).
+suffix = "_panels"
+
+# Sobrescreve o arquivo original no lugar (DESTRUTIVO; grava num temp e troca).
+overwrite = false
+
+# Sempre gerar preview (painéis desenhados, sem cortar) em vez de processar.
+# Normalmente é melhor usar a flag --preview pontualmente.
+# preview = false
+
+# Saída padrão (arquivo ou pasta). Geralmente melhor passar -o na linha de comando.
+# output = "./saida"

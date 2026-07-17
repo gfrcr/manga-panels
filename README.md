@@ -160,3 +160,6 @@ suffix = "_paineis"                   # texto no nome de saida (default _panels)
 
 As chaves são os nomes das flags (`max_width`, `keep_first`, …). Uma flag na
 linha de comando sempre vence o config. Ou aponte um arquivo com `--config`.
+
+Veja **[`manga-panels.example.toml`](manga-panels.example.toml)** com todas as
+opções documentadas — copie pra `manga-panels.toml` e ajuste.
