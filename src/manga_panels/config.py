@@ -1,4 +1,4 @@
-"""Carrega defaults de um manga-panels.toml (tabela [defaults]). CLI vence."""
+"""Load defaults from a manga-panels.toml ([defaults] table). The CLI wins."""
 from __future__ import annotations
 
 import tomllib
@@ -6,7 +6,7 @@ from pathlib import Path
 
 from manga_panels.errors import MangaPanelsError
 
-# chaves aceitas = dest do argparse
+# accepted keys = argparse dests
 _KNOWN = {"output", "detector", "min_area", "max_ink", "format", "quality",
           "max_width", "preview", "ltr", "page", "keep_first"}
 
@@ -20,7 +20,7 @@ def load_config(explicit_path: str | None = None, *, warn=print) -> dict:
     if explicit_path is not None:
         path = Path(explicit_path)
         if not path.exists():
-            raise MangaPanelsError(f"config nao encontrado: {explicit_path}")
+            raise MangaPanelsError(f"config not found: {explicit_path}")
     else:
         path = next((p for p in _DISCOVER if p.exists()), None)
         if path is None:
@@ -28,12 +28,12 @@ def load_config(explicit_path: str | None = None, *, warn=print) -> dict:
     try:
         data = tomllib.loads(path.read_text(encoding="utf-8"))
     except (tomllib.TOMLDecodeError, OSError) as e:
-        raise MangaPanelsError(f"config invalido ({path}): {e}") from e
+        raise MangaPanelsError(f"invalid config ({path}): {e}") from e
     out: dict = {}
     for k, v in data.get("defaults", {}).items():
         key = k.replace("-", "_")
         if key in _KNOWN:
             out[key] = v
         else:
-            warn(f"config: chave desconhecida ignorada: {k}")
+            warn(f"config: unknown key ignored: {k}")
     return out

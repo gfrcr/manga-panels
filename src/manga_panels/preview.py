@@ -1,5 +1,5 @@
-"""Modo preview: anota cada pagina com os paineis desenhados (sem cortar),
-pra calibrar antes de processar o volume."""
+"""Preview mode: annotate each page with the detected panels drawn on it (no
+cropping), to calibrate before processing the whole volume."""
 from __future__ import annotations
 
 from typing import Callable
@@ -13,13 +13,13 @@ from manga_panels.detect import Box, get_detector
 def _font(size: int):
     try:
         return ImageFont.load_default(size=size)   # Pillow >= 10.1
-    except TypeError:                              # Pillow antigo
+    except TypeError:                              # older Pillow
         return ImageFont.load_default()
 
 
 def annotate_page(page: Image.Image, boxes: list[Box]) -> Image.Image:
-    """Copia a pagina e desenha cada painel (retangulo + numero na ordem de
-    leitura). Nao altera a original. Cor red->green = progressao da leitura."""
+    """Copy the page and draw each panel (rectangle + number in reading order).
+    Does not modify the original. Color red->green = reading progression."""
     im = page.convert("RGB").copy()
     d = ImageDraw.Draw(im, "RGBA")
     n = len(boxes)

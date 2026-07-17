@@ -15,8 +15,8 @@ class Detector(Protocol):
 
 
 def _content_segments(is_bg: np.ndarray, min_gutter: int) -> list[tuple[int, int]]:
-    """Segmentos de conteudo (start, end) separados por sarjetas (runs de fundo
-    com comprimento >= min_gutter). Retorna [] se nao ha corte interno real."""
+    """Content segments (start, end) separated by gutters (background runs of
+    length >= min_gutter). Returns [] if there is no real internal cut."""
     L = len(is_bg)
     gutters: list[tuple[int, int]] = []
     run_start: int | None = None
@@ -48,9 +48,9 @@ class XYCutDetector:
         self.min_gutter = min_gutter
         self.min_frac = min_frac
         self.rtl = rtl
-        # max_ink: fracao maxima de tinta numa linha/coluna pra ela ainda contar
-        # como sarjeta (fundo). Scans reais tem screentone/baloes/onomatopeia
-        # cruzando a sarjeta; 0.01 (quase-puro-branco) sub-segmenta demais.
+        # max_ink: max ink fraction a line/column may have and still count as a
+        # gutter (background). Real scans have screentone/balloons/onomatopoeia
+        # crossing the gutter; 0.01 (near-pure-white) over-segments.
         self.max_ink = max_ink
 
     def detect(self, page: Image.Image) -> list[Box]:
@@ -58,15 +58,15 @@ class XYCutDetector:
         h, w = gray.shape
         min_area = self.min_frac * h * w
         out: list[Box] = []
-        # axis 0 = corta horizontalmente (linhas empilhadas); axis 1 = colunas
+        # axis 0 = cut horizontally (stacked rows); axis 1 = columns
         self._recurse(gray, 0, 0, w, h, axis=0, min_area=min_area, out=out)
         return out
 
     def _recurse(self, gray, x, y, w, h, axis, min_area, out) -> None:
         region = gray[y:y + h, x:x + w]
-        ink = region < self.bg_thresh          # True onde tem traco
-        # fracao de tinta por linha ao longo do eixo de corte
-        line_ink = ink.mean(axis=1 - axis)     # axis0 -> por linha(y); axis1 -> por coluna(x)
+        ink = region < self.bg_thresh          # True where there is ink
+        # ink fraction per line along the cut axis
+        line_ink = ink.mean(axis=1 - axis)     # axis0 -> per row(y); axis1 -> per col(x)
         is_bg = line_ink < self.max_ink
         segs = _content_segments(is_bg, self.min_gutter)
         if not segs:
@@ -78,7 +78,7 @@ class XYCutDetector:
                     out.append((x, y, w, h))
                 return
             axis = other
-        if axis == 1 and self.rtl:             # colunas: emitir direita->esquerda
+        if axis == 1 and self.rtl:             # columns: emit right->left
             segs = segs[::-1]
         for s, e in segs:
             if axis == 0:
@@ -87,7 +87,7 @@ class XYCutDetector:
                 self._recurse(gray, x + s, y, e - s, h, 0, min_area, out)
 
     def warmup(self) -> None:
-        pass                          # xycut nao carrega nada
+        pass                          # xycut loads nothing
 
 
 def get_detector(name: str, *, rtl: bool = True, min_frac: float = 0.02,
@@ -95,6 +95,6 @@ def get_detector(name: str, *, rtl: bool = True, min_frac: float = 0.02,
     if name == "xycut":
         return XYCutDetector(rtl=rtl, min_frac=min_frac, max_ink=max_ink)
     if name == "ml":
-        from manga_panels.ml import MagiDetector   # import lazy
+        from manga_panels.ml import MagiDetector   # lazy import
         return MagiDetector()
-    raise ValueError(f"detector desconhecido: {name!r}")
+    raise ValueError(f"unknown detector: {name!r}")

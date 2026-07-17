@@ -19,8 +19,8 @@ def test_annotate_page_same_size_and_original_untouched():
     boxes = XYCutDetector().detect(page)
     out = annotate_page(page, boxes)
     assert out.size == page.size
-    assert page.tobytes() == before                # original intacta
-    assert out.tobytes() != before                 # anotou algo (desenhou caixas)
+    assert page.tobytes() == before                # original untouched
+    assert out.tobytes() != before                 # annotated something (drew boxes)
 
 
 def test_annotate_page_no_boxes_returns_same_size():
@@ -31,9 +31,9 @@ def test_annotate_page_no_boxes_returns_same_size():
 
 def test_preview_archive_page_count(tmp_path):
     src = tmp_path / "ch.cbz"
-    pack([_grid_page(), _grid_page()], src)         # 2 paginas
+    pack([_grid_page(), _grid_page()], src)         # 2 pages
     out = tmp_path / "ch_preview.cbz"
     n = preview_archive(src, out)
-    assert n == 2                                    # 1 imagem anotada por pagina
+    assert n == 2                                    # 1 annotated image per page
     with zipfile.ZipFile(out) as z:
         assert len(z.namelist()) == 2

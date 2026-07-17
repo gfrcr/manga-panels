@@ -3,7 +3,7 @@ import manga_panels.ml as ml
 
 
 def test_xycut_warmup_is_noop():
-    XYCutDetector().warmup()          # nao levanta, nao carrega nada
+    XYCutDetector().warmup()          # does not raise, loads nothing
 
 
 def test_magi_warmup_calls_load(monkeypatch):

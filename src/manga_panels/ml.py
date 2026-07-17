@@ -1,6 +1,6 @@
 # src/manga_panels/ml.py
-"""Detector de paineis via Magi v2. Todo import de torch/transformers e LAZY
-(dentro das funcoes) pra o base install continuar leve."""
+"""Panel detector via Magi v2. Every torch/transformers import is LAZY (inside
+functions) so the base install stays light."""
 from __future__ import annotations
 
 import warnings
@@ -12,12 +12,12 @@ from manga_panels.detect import Box
 from manga_panels.errors import MissingDependency
 
 _MODEL_NAME = "ragavsachdeva/magiv2"
-_MODEL = None  # singleton carregado sob demanda
+_MODEL = None  # singleton loaded on demand
 
 
 def _panels_to_boxes(panels, page_w: int, page_h: int) -> list[Box]:
-    """[x1,y1,x2,y2] (pixels, ordem de leitura do Magi) -> (x,y,w,h) int,
-    clampado na pagina, sem caixas degeneradas. Preserva a ordem."""
+    """[x1,y1,x2,y2] (pixels, Magi reading order) -> (x,y,w,h) int, clamped to
+    the page, without degenerate boxes. Preserves order."""
     boxes: list[Box] = []
     for p in panels:
         x1, y1, x2, y2 = (float(v) for v in p[:4])
@@ -34,7 +34,7 @@ def _panels_to_boxes(panels, page_w: int, page_h: int) -> list[Box]:
 
 
 def _load_magi():
-    """Carrega o Magi v2 uma vez (singleton). Erro claro se o extra [ml] falta."""
+    """Load Magi v2 once (singleton). Clear error if the [ml] extra is missing."""
     global _MODEL
     if _MODEL is None:
         try:
@@ -45,8 +45,8 @@ def _load_magi():
             hf_logging.set_verbosity_error()
         except ImportError as e:
             raise MissingDependency(
-                "detector ml precisa do extra [ml]: uv sync --extra ml "
-                "(ou pip install 'manga-panels[ml]')"
+                "ml detector needs the [ml] extra: uv sync --extra ml "
+                "(or pip install 'manga-panels[ml]')"
             ) from e
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -57,10 +57,10 @@ def _load_magi():
 
 
 class MagiDetector:
-    """Detector ML. detect() devolve paineis em ordem de leitura (do proprio Magi)."""
+    """ML detector. detect() returns panels in reading order (from Magi itself)."""
 
     def detect(self, page: Image.Image) -> list[Box]:
-        model = _load_magi()                 # MissingDependency claro se [ml] ausente
+        model = _load_magi()                 # clear MissingDependency if [ml] absent
         import torch
         arr = np.array(page.convert("L").convert("RGB"))
         with torch.no_grad():
@@ -68,4 +68,4 @@ class MagiDetector:
         return _panels_to_boxes(results[0]["panels"], page.width, page.height)
 
     def warmup(self) -> None:
-        _load_magi()                  # carrega o singleton (spinner no CLI)
+        _load_magi()                  # load the singleton (spinner in the CLI)

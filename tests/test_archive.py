@@ -57,7 +57,7 @@ def test_pack_png_format(tmp_path):
 
 
 def test_jpeg_quality_knob_affects_size(tmp_path):
-    # menor qualidade -> menor arquivo (prova que --quality esta ligado)
+    # lower quality -> smaller file (proves --quality is wired up)
     import numpy as np
     arr = np.random.default_rng(0).integers(0, 256, (128, 128, 3), dtype="uint8")
     img = Image.fromarray(arr, "RGB")
@@ -77,20 +77,20 @@ def test_pack_max_width_downscales_wide(tmp_path):
     wide = Image.new("RGB", (2000, 1000), (10, 20, 30))
     out = tmp_path / "o.cbz"
     pack([wide], out, max_width=800)
-    assert unpack(out)[0].size == (800, 400)      # proporcao mantida
+    assert unpack(out)[0].size == (800, 400)      # aspect ratio preserved
 
 
 def test_pack_max_width_leaves_narrow_untouched(tmp_path):
     narrow = Image.new("RGB", (500, 900), (0, 0, 0))
     out = tmp_path / "o.cbz"
     pack([narrow], out, max_width=800)
-    assert unpack(out)[0].size == (500, 900)      # nunca amplia
+    assert unpack(out)[0].size == (500, 900)      # never upscales
 
 
 def test_pack_max_width_none_keeps_size(tmp_path):
     im = Image.new("RGB", (2000, 1000), (0, 0, 0))
     out = tmp_path / "o.cbz"
-    pack([im], out)                                # default = sem limite
+    pack([im], out)                                # default = no limit
     assert unpack(out)[0].size == (2000, 1000)
 
 
@@ -99,7 +99,7 @@ def test_unpack_empty_archive_raises(tmp_path):
     from manga_panels.errors import EmptyArchive
     cbz = tmp_path / "empty.cbz"
     with zipfile.ZipFile(cbz, "w") as z:
-        z.writestr("leiame.txt", "sem imagens")
+        z.writestr("readme.txt", "no images")
     with pytest.raises(EmptyArchive):
         unpack(cbz)
 
@@ -108,7 +108,7 @@ def test_unpack_corrupt_archive_raises(tmp_path):
     import pytest
     from manga_panels.errors import BadArchive
     cbz = tmp_path / "bad.cbz"
-    cbz.write_bytes(b"nao sou um zip")
+    cbz.write_bytes(b"not a zip")
     with pytest.raises(BadArchive):
         unpack(cbz)
 
@@ -122,8 +122,8 @@ def test_unpack_corrupt_entry_data_raises(tmp_path):
     with zipfile.ZipFile(cbz, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("0001.png", buf.getvalue())
     data = bytearray(cbz.read_bytes())
-    for i in range(50, 90):            # corrompe o meio do stream deflate
+    for i in range(50, 90):            # corrupt the middle of the deflate stream
         data[i] ^= 0xFF
     cbz.write_bytes(data)
-    with pytest.raises(BadArchive):    # zlib.error embrulhado, nao traceback cru
+    with pytest.raises(BadArchive):    # wrapped zlib.error, not a raw traceback
         unpack(cbz)

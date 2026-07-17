@@ -4,7 +4,7 @@ from manga_panels.detect import XYCutDetector, get_detector
 
 
 def _page_with_grid():
-    # pagina branca 200x200 com 4 quadrados pretos (2x2), sarjeta de 20px
+    # white 200x200 page with 4 black squares (2x2), 20px gutter
     arr = np.full((200, 200), 255, np.uint8)
     for (y, x) in [(20, 20), (20, 120), (120, 20), (120, 120)]:
         arr[y:y + 60, x:x + 60] = 0
@@ -19,14 +19,14 @@ def test_detects_four_panels(tmp_path):
 
 
 def test_reading_order_rtl_top_row_first_and_right_first():
-    # RTL: ordem esperada = topo-direita, topo-esquerda, base-direita, base-esquerda
+    # RTL: expected order = top-right, top-left, bottom-right, bottom-left
     boxes = XYCutDetector(rtl=True).detect(_page_with_grid())
     centers = [(x + w / 2, y + h / 2) for (x, y, w, h) in boxes]
-    # painel 0 fica na metade de cima (y pequeno) e na direita (x grande)
+    # panel 0 is in the top half (small y) and on the right (large x)
     assert centers[0][1] < 100 and centers[0][0] > 100
-    # painel 1 fica em cima e na esquerda
+    # panel 1 is on top and on the left
     assert centers[1][1] < 100 and centers[1][0] < 100
-    # painel 2 fica embaixo e na direita; painel 3 embaixo e na esquerda
+    # panel 2 is bottom-right; panel 3 is bottom-left
     assert centers[2][1] > 100 and centers[2][0] > 100
     assert centers[3][1] > 100 and centers[3][0] < 100
 
@@ -37,20 +37,20 @@ def test_blank_page_returns_empty():
 
 
 def _page_with_noisy_gutter():
-    # 2 paineis lado a lado com uma sarjeta vertical "suja": ~3% de tinta
-    # cruzando (simula screentone/onomatopeia). 200x100, gutter x[90..110].
+    # 2 panels side by side with a "dirty" vertical gutter: ~3% ink
+    # crossing it (simulates screentone/onomatopoeia). 200x100, gutter x[90..110].
     arr = np.full((100, 200), 255, np.uint8)
-    arr[10:90, 10:90] = 0          # painel esquerdo
-    arr[10:90, 110:190] = 0        # painel direito
-    arr[45:48, 90:110] = 0         # 3 linhas de tinta na sarjeta -> ~3%/coluna
+    arr[10:90, 10:90] = 0          # left panel
+    arr[10:90, 110:190] = 0        # right panel
+    arr[45:48, 90:110] = 0         # 3 ink rows in the gutter -> ~3%/column
     return Image.fromarray(arr, "L").convert("RGB")
 
 
 def test_max_ink_knob_splits_noisy_gutter():
     page = _page_with_noisy_gutter()
-    # conservador demais (antigo default): a sarjeta suja passa batido -> 1 painel
+    # too conservative (old default): the dirty gutter slips through -> 1 panel
     assert len(XYCutDetector(max_ink=0.01).detect(page)) == 1
-    # default calibrado: tolera a intrusao e separa os 2 paineis
+    # calibrated default: tolerates the intrusion and splits the 2 panels
     assert len(XYCutDetector(max_ink=0.08).detect(page)) == 2
 
 

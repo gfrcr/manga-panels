@@ -15,7 +15,7 @@ def test_unknown_key_ignored_with_warning(tmp_path):
     cfg.write_text('[defaults]\ndetector = "ml"\nbogus = 1\n')
     warned = []
     assert load_config(str(cfg), warn=warned.append) == {"detector": "ml"}
-    assert warned                      # avisou sobre a chave desconhecida
+    assert warned                      # warned about the unknown key
 
 
 def test_hyphen_key_normalized(tmp_path):
@@ -31,11 +31,11 @@ def test_missing_explicit_raises(tmp_path):
 
 def test_bad_toml_raises(tmp_path):
     cfg = tmp_path / "c.toml"
-    cfg.write_text("isto = = nao e toml")
+    cfg.write_text("this = = not toml")
     with pytest.raises(MangaPanelsError):
         load_config(str(cfg))
 
 
 def test_no_file_returns_empty(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "_DISCOVER", [tmp_path / "manga-panels.toml"])
-    assert load_config(None) == {}     # nenhum arquivo -> sem defaults
+    assert load_config(None) == {}     # no file -> no defaults

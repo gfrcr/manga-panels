@@ -21,7 +21,7 @@ def test_crop_returns_subimages():
 
 def test_process_archive_explodes_panels(tmp_path):
     src = tmp_path / "ch.cbz"
-    pack([_grid_page()], src)                     # 1 pagina, 4 paineis
+    pack([_grid_page()], src)                     # 1 page, 4 panels
     out = tmp_path / "ch_panels.cbz"
     n = process_archive(src, out, page_pos="off")
     assert n == 4
@@ -31,12 +31,12 @@ def test_process_archive_explodes_panels(tmp_path):
 
 def test_process_archive_prepends_full_page(tmp_path):
     src = tmp_path / "ch.cbz"
-    pack([_grid_page()], src)                     # 1 pagina 200x200, 4 paineis
+    pack([_grid_page()], src)                     # 1 page 200x200, 4 panels
     out = tmp_path / "ch_panels.cbz"
     n = process_archive(src, out)                 # page_pos default = before
-    assert n == 5                                 # pagina cheia + 4 paineis
+    assert n == 5                                 # full page + 4 panels
     imgs = unpack(out)
-    assert imgs[0].size == (200, 200)             # macro primeiro
+    assert imgs[0].size == (200, 200)             # macro first
     assert all(im.size != (200, 200) for im in imgs[1:])
 
 
@@ -44,11 +44,11 @@ def test_include_page_not_duplicated_when_whole_page(tmp_path):
     src = tmp_path / "blank.cbz"
     pack([Image.new("RGB", (100, 100), (255, 255, 255))], src)
     out = tmp_path / "out.cbz"
-    assert process_archive(src, out) == 1         # 0 paineis -> pagina uma vez
+    assert process_archive(src, out) == 1         # 0 panels -> page once
 
 
 def _single_panel_page():
-    # pagina branca com UM retangulo preto sem sarjeta interna -> 1 painel
+    # white page with ONE black rectangle and no internal gutter -> 1 panel
     arr = np.full((200, 200), 255, np.uint8)
     arr[40:160, 40:160] = 0
     return Image.fromarray(arr, "L").convert("RGB")
@@ -58,7 +58,7 @@ def test_single_panel_page_emitted_once(tmp_path):
     src = tmp_path / "sp.cbz"
     pack([_single_panel_page()], src)
     out = tmp_path / "out.cbz"
-    assert process_archive(src, out) == 1         # 1 painel ~ pagina -> nao duplica
+    assert process_archive(src, out) == 1         # 1 panel ~ page -> no duplicate
 
 
 def test_page_pos_after_puts_macro_last(tmp_path):
@@ -68,8 +68,8 @@ def test_page_pos_after_puts_macro_last(tmp_path):
     n = process_archive(src, out, page_pos="after")
     assert n == 5
     imgs = unpack(out)
-    assert imgs[-1].size == (200, 200)            # macro por ultimo
-    assert imgs[0].size != (200, 200)             # painel primeiro
+    assert imgs[-1].size == (200, 200)            # macro last
+    assert imgs[0].size != (200, 200)             # panel first
 
 
 def test_process_archive_bad_page_pos_raises(tmp_path):
@@ -82,12 +82,12 @@ def test_process_archive_bad_page_pos_raises(tmp_path):
 
 def test_keep_first_keeps_pages_whole(tmp_path):
     src = tmp_path / "ch.cbz"
-    pack([_grid_page(), _grid_page()], src)       # 2 paginas de 4 paineis
+    pack([_grid_page(), _grid_page()], src)       # 2 pages of 4 panels
     out = tmp_path / "out.cbz"
-    n = process_archive(src, out, keep_first=1)   # 1a inteira, 2a cortada
-    assert n == 6                                 # 1 (inteira) + 5 (macro+4)
+    n = process_archive(src, out, keep_first=1)   # 1st whole, 2nd cropped
+    assert n == 6                                 # 1 (whole) + 5 (macro+4)
     imgs = unpack(out)
-    assert imgs[0].size == (200, 200)             # 1a pagina inteira, sem cortar
+    assert imgs[0].size == (200, 200)             # 1st page whole, uncropped
 
 
 def test_blank_page_falls_back_to_whole_page(tmp_path):
@@ -95,7 +95,7 @@ def test_blank_page_falls_back_to_whole_page(tmp_path):
     pack([Image.new("RGB", (100, 100), (255, 255, 255))], src)
     out = tmp_path / "blank_panels.cbz"
     n = process_archive(src, out)
-    assert n == 1                                  # nunca perde a pagina
+    assert n == 1                                  # never loses the page
 
 
 def test_cli_processes_folder(tmp_path):
@@ -135,21 +135,21 @@ def test_cli_same_stem_different_ext_no_overwrite(tmp_path):
     for f in outputs:
         assert f.stat().st_size > 0
         with zipfile.ZipFile(f) as z:
-            assert len(z.namelist()) == 5   # pagina cheia + 4 paineis (--page default)
+            assert len(z.namelist()) == 5   # full page + 4 panels (--page default)
 
 
 def test_cli_bracket_filename_does_not_crash(tmp_path):
-    # nomes de manga real usam colchetes ([c01], [web]); "/" nunca aparece num nome de
-    # arquivo (e separador de path no SO), entao a tag de fechamento do Rich ([/x]) so
-    # chega intacta via outro sink nao-filesystem: uma chave desconhecida no config toml.
+    # real manga names use brackets ([c01], [web]); "/" never appears in a file
+    # name (it's the OS path separator), so Rich's closing tag ([/x]) only reaches
+    # us intact via another non-filesystem sink: an unknown key in the config toml.
     from manga_panels.cli import main
-    src = tmp_path / "capitulo [c01] [web].cbz"   # colchetes parecem markup do Rich
+    src = tmp_path / "chapter [c01] [web].cbz"   # brackets look like Rich markup
     pack([_grid_page()], src)
     cfg = tmp_path / "manga-panels.toml"
-    cfg.write_text('[defaults]\n"weird [c01] [/x]" = true\n')  # chave desconhecida -> warn()
-    rc = main([str(src), "--config", str(cfg)])   # nao pode levantar MarkupError
+    cfg.write_text('[defaults]\n"weird [c01] [/x]" = true\n')  # unknown key -> warn()
+    rc = main([str(src), "--config", str(cfg)])   # must not raise MarkupError
     assert rc == 0
-    assert (tmp_path / "capitulo [c01] [web]_panels.cbz").exists()
+    assert (tmp_path / "chapter [c01] [web]_panels.cbz").exists()
 
 
 def test_cli_ml_detector_reports_error_without_raising(tmp_path, monkeypatch):
@@ -158,7 +158,7 @@ def test_cli_ml_detector_reports_error_without_raising(tmp_path, monkeypatch):
 
     def _boom():
         from manga_panels.errors import MissingDependency
-        raise MissingDependency("detector ml precisa do extra [ml]: uv sync --extra ml")
+        raise MissingDependency("ml detector needs the [ml] extra: uv sync --extra ml")
 
     monkeypatch.setattr(ml, "_load_magi", _boom)
     src = tmp_path / "ch.cbz"
@@ -192,13 +192,13 @@ def test_cli_config_defaults_applied_and_cli_wins(tmp_path):
     pack([_grid_page()], src)
     cfg = tmp_path / "manga-panels.toml"
     cfg.write_text('[defaults]\nformat = "png"\n')
-    # config seta png; sem flag -> saida png
+    # config sets png; no flag -> png output
     out1 = tmp_path / "a.cbz"
     assert main([str(src), "-o", str(out1), "--config", str(cfg)]) == 0
     import zipfile
     with zipfile.ZipFile(out1) as z:
         assert z.namelist()[0].endswith(".png")
-    # flag na CLI vence o config
+    # CLI flag beats the config
     out2 = tmp_path / "b.cbz"
     assert main([str(src), "-o", str(out2), "--config", str(cfg), "-f", "jpeg"]) == 0
     with zipfile.ZipFile(out2) as z:

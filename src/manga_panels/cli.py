@@ -23,47 +23,47 @@ console = Console()
 def _build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog="manga-panels",
-        description="Corta paginas de manga em paineis e reempacota como CBZ.",
+        description="Split manga pages into panels and repackage as CBZ.",
         formatter_class=RichHelpFormatter,
     )
-    ap.add_argument("input", help="arquivo .cbz/.cbr ou pasta com varios")
-    ap.add_argument("-o", "--output", help="arquivo ou pasta de saida")
-    ap.add_argument("--config", help="TOML de defaults (default: ./manga-panels.toml)")
+    ap.add_argument("input", help="a .cbz/.cbr file or a folder with several")
+    ap.add_argument("-o", "--output", help="output file or folder")
+    ap.add_argument("--config", help="TOML defaults (default: ./manga-panels.toml)")
 
-    g_det = ap.add_argument_group("deteccao")
+    g_det = ap.add_argument_group("detection")
     g_det.add_argument("-d", "--detector", default="xycut", choices=["xycut", "ml"],
-                       help="detector de painel (default xycut)")
+                       help="panel detector (default xycut)")
     g_det.add_argument("--min-area", type=float, default=0.02,
-                       help="fracao minima da area da pagina por painel (default 0.02)")
+                       help="minimum page-area fraction per panel (default 0.02)")
     g_det.add_argument("--max-ink", type=float, default=0.08,
-                       help="(xycut) tolerancia de tinta na sarjeta (default 0.08)")
+                       help="(xycut) ink tolerance in the gutter (default 0.08)")
 
-    g_out = ap.add_argument_group("saida")
+    g_out = ap.add_argument_group("output")
     g_out.add_argument("-f", "--format", default="jpeg", choices=["jpeg", "png"],
-                       help="encoding das imagens no cbz (default jpeg)")
+                       help="image encoding inside the cbz (default jpeg)")
     g_out.add_argument("-q", "--quality", type=int, default=90,
-                       help="qualidade jpeg 1-95 (default 90)")
+                       help="jpeg quality 1-95 (default 90)")
     g_out.add_argument("-w", "--max-width", type=int, default=None,
-                       help="reduz imagens mais largas que N px (default: sem limite)")
+                       help="shrink images wider than N px (default: no limit)")
     g_out.add_argument("--preview", action="store_true",
-                       help="gera <stem>_preview.cbz com os paineis desenhados, sem cortar")
+                       help="write <stem>_preview.cbz with the panels drawn, without cropping")
 
     g_lay = ap.add_argument_group("layout")
-    g_lay.add_argument("--ltr", action="store_true", help="leitura esquerda->direita")
+    g_lay.add_argument("--ltr", action="store_true", help="left-to-right reading")
     g_lay.add_argument("--page", choices=["before", "after", "off"], default="before",
-                       help="posicao da pagina-macro (default before)")
+                       help="position of the macro page (default before)")
     g_lay.add_argument("-k", "--keep-first", type=int, default=0,
-                       help="mantem as primeiras N paginas inteiras")
+                       help="keep the first N pages whole")
     return ap
 
 
 def _jobs(src: Path, output: str | None, suffix: str):
-    """Retorna (jobs, erro): lista de (in_path, out_path) ou ([], mensagem)."""
+    """Returns (jobs, error): a list of (in_path, out_path) or ([], message)."""
     if src.is_dir():
         out_dir = Path(output) if output else src.with_name(src.name + "_panels")
         files = sorted(p for p in src.iterdir() if p.suffix.lower() in _EXTS)
         if not files:
-            return [], f"nenhum arquivo .cbz/.cbr em {src}"
+            return [], f"no .cbz/.cbr files in {src}"
         out_dir.mkdir(parents=True, exist_ok=True)
         jobs, used = [], set()
         for f in files:
@@ -74,26 +74,26 @@ def _jobs(src: Path, output: str | None, suffix: str):
             jobs.append((f, out))
         return jobs, None
     if not src.exists():
-        return [], f"nao encontrado: {src}"
+        return [], f"not found: {src}"
     out = Path(output) if output else src.with_name(f"{src.stem}{suffix}")
     return [(src, out)], None
 
 
 def _summary(rows) -> Table:
-    t = Table(title="resumo", title_style="bold")
-    t.add_column("Arquivo")
-    t.add_column("Imagens", justify="right")
-    t.add_column("Tamanho", justify="right")
+    t = Table(title="summary", title_style="bold")
+    t.add_column("File")
+    t.add_column("Images", justify="right")
+    t.add_column("Size", justify="right")
     t.add_column("Status", justify="center")
     for name, n, size, ok in rows:
         t.add_row(escape(name), str(n) if ok else "-",
                   f"{size / 1e6:.0f} MB" if size else "-",
-                  "[green]OK[/]" if ok else "[red]FALHA[/]")
+                  "[green]OK[/]" if ok else "[red]FAILED[/]")
     return t
 
 
 def main(argv: list[str] | None = None) -> int:
-    # pre-parse do --config pra aplicar defaults antes do parse final
+    # pre-parse --config to apply defaults before the final parse
     pre = argparse.ArgumentParser(add_help=False)
     pre.add_argument("--config")
     cfg_arg, _ = pre.parse_known_args(argv)
@@ -101,9 +101,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         cfg = load_config(cfg_arg.config, warn=lambda m: console.print(f"[yellow]{escape(m)}[/]"))
     except MangaPanelsError as e:
-        console.print(f"[red]erro:[/] {escape(str(e))}")
+        console.print(f"[red]error:[/] {escape(str(e))}")
         return 1
-    ap.set_defaults(**cfg)             # config < flag da CLI
+    ap.set_defaults(**cfg)             # config < CLI flag
     args = ap.parse_args(argv)
 
     common = dict(detector=args.detector, rtl=not args.ltr, min_frac=args.min_area,
@@ -121,12 +121,12 @@ def main(argv: list[str] | None = None) -> int:
         console.print(f"[red]{escape(err)}[/]")
         return 1
 
-    if args.detector == "ml":          # spinner enquanto carrega o modelo
+    if args.detector == "ml":          # spinner while the model loads
         try:
-            with console.status("[cyan]carregando modelo Magi (1o uso baixa ~1.5GB)..."):
+            with console.status("[cyan]loading Magi model (first use downloads ~1.5GB)..."):
                 get_detector("ml").warmup()
         except MangaPanelsError as e:
-            console.print(f"[red]erro:[/] {escape(str(e))}")
+            console.print(f"[red]error:[/] {escape(str(e))}")
             return 1
 
     rows, failed = [], False
@@ -143,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
                 n = run(in_path, out, on_page=on_page, **kw)
                 rows.append((in_path.name, n, out.stat().st_size, True))
             except (MangaPanelsError, ValueError) as e:
-                progress.console.print(f"[red]FALHA[/] {escape(in_path.name)}: {escape(str(e))}")
+                progress.console.print(f"[red]FAILED[/] {escape(in_path.name)}: {escape(str(e))}")
                 rows.append((in_path.name, 0, 0, False))
                 failed = True
             progress.remove_task(task)
