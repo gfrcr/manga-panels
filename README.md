@@ -20,6 +20,10 @@ uv tool install .            # instala o comando `manga-panels`
 uvx --from . manga-panels --help   # ou rodar sem instalar
 ```
 
+> `uv tool install` **congela** o código: depois de editar o repo, rode
+> `uv tool install . --force` de novo (ou `uv tool install -e .` pra seguir o
+> repo ao vivo).
+
 ## Usar
 
 ```bash
@@ -44,7 +48,35 @@ manga-panels capitulo.cbz --detector ml --preview
 
 # mantem as 2 primeiras paginas inteiras (capa/folha de rosto) e macro depois dos paineis
 manga-panels capitulo.cbz -k 2 --page after
+
+# muda o texto que entra no nome de saida (default _panels) -> capitulo_cortado.cbz
+manga-panels capitulo.cbz --suffix _cortado
+
+# sobrescreve o arquivo original no lugar (destrutivo; grava num temp e troca no fim)
+manga-panels capitulo.cbz --overwrite
 ```
+
+## Biblioteca (seleção interativa)
+
+Aponte uma pasta como biblioteca e rode **sem input** pra escolher os arquivos
+num menu numerado — navega nas subpastas de série e seleciona os volumes:
+
+```bash
+manga-panels --library /mnt/unraid/media/manga -o ./saida
+```
+
+```
+/mnt/unraid/media/manga
+   1) [dir]  Monster
+> 1
+   0) ..
+   1)       Monster Vol.01.cbz
+   2)       Monster Vol.02.cbz
+> 1,2        # numeros, faixas (1-4), 'a' pra todos, Enter pra cancelar
+```
+
+Sem `-o`, a saída vai pra pasta atual. Dá pra fixar a `library` no config
+(abaixo) e aí só rodar `manga-panels`.
 
 A saida e sempre um CBZ (zip de imagens); `--format` so muda o encoding das
 imagens dentro dele. Default e JPEG q90 (~1x o tamanho da fonte); PNG e
@@ -97,10 +129,12 @@ Pra não repetir flags, crie um `manga-panels.toml` (na pasta atual ou em
 
 ```toml
 [defaults]
+library = "/mnt/unraid/media/manga"   # rodar sem input abre o menu aqui
 detector = "ml"
 max_width = 1264
 quality = 85
 page = "before"
+suffix = "_paineis"                   # texto no nome de saida (default _panels)
 ```
 
 As chaves são os nomes das flags (`max_width`, `keep_first`, …). Uma flag na

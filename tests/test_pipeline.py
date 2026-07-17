@@ -186,6 +186,54 @@ def test_process_archive_on_page_called_per_page(tmp_path):
     assert calls == [(1, 2), (2, 2)]
 
 
+def test_cli_no_input_no_library_errors(monkeypatch):
+    import manga_panels.config as config
+    monkeypatch.setattr(config, "_DISCOVER", [])   # ignore any stray toml in cwd
+    from manga_panels.cli import main
+    assert main([]) != 0
+
+
+def test_cli_no_input_uses_library_picker(tmp_path, monkeypatch):
+    import manga_panels.config as config
+    import manga_panels.browse as browse
+    monkeypatch.setattr(config, "_DISCOVER", [])
+    src = tmp_path / "Vol.01.cbz"
+    pack([_grid_page()], src)
+    monkeypatch.setattr(browse, "pick_from_library", lambda root, **kw: [src])
+    from manga_panels.cli import main
+    out_dir = tmp_path / "out"
+    rc = main(["--library", str(tmp_path), "-o", str(out_dir)])
+    assert rc == 0
+    assert (out_dir / "Vol.01_panels.cbz").exists()
+
+
+def test_cli_custom_suffix(tmp_path):
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    assert main([str(src), "--suffix", "_cut"]) == 0
+    assert (tmp_path / "ch_cut.cbz").exists()
+
+
+def test_cli_overwrite_replaces_source(tmp_path):
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)                       # 1 page -> 4 panels
+    assert len(unpack(src)) == 1
+    assert main([str(src), "--overwrite"]) == 0
+    assert not (tmp_path / "ch_panels.cbz").exists()   # no sibling written
+    assert not (tmp_path / "ch.cbz.tmp").exists()      # temp cleaned up
+    assert len(unpack(src)) == 5                        # source now holds macro + 4
+
+
+def test_cli_empty_suffix_refuses_to_clobber_source(tmp_path):
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    assert main([str(src), "--suffix", ""]) != 0    # out == source -> refuse
+    assert len(unpack(src)) == 1                     # untouched
+
+
 def test_cli_config_defaults_applied_and_cli_wins(tmp_path):
     from manga_panels.cli import main
     src = tmp_path / "ch.cbz"

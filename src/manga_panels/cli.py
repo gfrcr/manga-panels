@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
 from rich.console import Console
@@ -26,9 +27,12 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Split manga pages into panels and repackage as CBZ.",
         formatter_class=RichHelpFormatter,
     )
-    ap.add_argument("input", help="a .cbz/.cbr file or a folder with several")
+    ap.add_argument("input", nargs="?",
+                    help="a .cbz/.cbr file or folder (omit to pick from the library)")
     ap.add_argument("-o", "--output", help="output file or folder")
     ap.add_argument("--config", help="TOML defaults (default: ./manga-panels.toml)")
+    ap.add_argument("-L", "--library",
+                    help="folder to browse and pick from when no input is given")
 
     g_det = ap.add_argument_group("detection")
     g_det.add_argument("-d", "--detector", default="xycut", choices=["xycut", "ml"],
@@ -47,6 +51,10 @@ def _build_parser() -> argparse.ArgumentParser:
                        help="shrink images wider than N px (default: no limit)")
     g_out.add_argument("--preview", action="store_true",
                        help="write <stem>_preview.cbz with the panels drawn, without cropping")
+    g_out.add_argument("--suffix", default="_panels",
+                       help="text appended to the output name (default _panels)")
+    g_out.add_argument("--overwrite", action="store_true",
+                       help="write back over the source file (destructive)")
 
     g_lay = ap.add_argument_group("layout")
     g_lay.add_argument("--ltr", action="store_true", help="left-to-right reading")
@@ -57,22 +65,27 @@ def _build_parser() -> argparse.ArgumentParser:
     return ap
 
 
+def _pair(files, out_dir: Path, suffix: str):
+    """Map each source file to a unique out_dir/<stem><suffix> (de-dupes stems)."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    jobs, used = [], set()
+    for f in files:
+        out = out_dir / f"{f.stem}{suffix}"
+        if out in used:
+            out = out_dir / f"{f.stem}_{f.suffix.lstrip('.')}{suffix}"
+        used.add(out)
+        jobs.append((f, out))
+    return jobs
+
+
 def _jobs(src: Path, output: str | None, suffix: str):
     """Returns (jobs, error): a list of (in_path, out_path) or ([], message)."""
     if src.is_dir():
-        out_dir = Path(output) if output else src.with_name(src.name + "_panels")
         files = sorted(p for p in src.iterdir() if p.suffix.lower() in _EXTS)
         if not files:
             return [], f"no .cbz/.cbr files in {src}"
-        out_dir.mkdir(parents=True, exist_ok=True)
-        jobs, used = [], set()
-        for f in files:
-            out = out_dir / f"{f.stem}{suffix}"
-            if out in used:
-                out = out_dir / f"{f.stem}_{f.suffix.lstrip('.')}{suffix}"
-            used.add(out)
-            jobs.append((f, out))
-        return jobs, None
+        out_dir = Path(output) if output else src.with_name(src.name + "_panels")
+        return _pair(files, out_dir, suffix), None
     if not src.exists():
         return [], f"not found: {src}"
     out = Path(output) if output else src.with_name(f"{src.stem}{suffix}")
@@ -114,12 +127,33 @@ def main(argv: list[str] | None = None) -> int:
     else:
         run = process_archive
         kw = {**common, "page_pos": args.page, "keep_first": args.keep_first}
-        suffix = "_panels.cbz"
+        suffix = f"{args.suffix}.cbz"
 
-    jobs, err = _jobs(Path(args.input), args.output, suffix)
+    if args.input is None:
+        if not args.library:
+            console.print("[red]give an input, or set 'library' in the config[/]")
+            return 1
+        from manga_panels.browse import pick_from_library
+        picks = pick_from_library(args.library, console=console)
+        if not picks:
+            console.print("nothing selected")
+            return 0
+        out_dir = Path(args.output) if args.output else Path.cwd()
+        jobs, err = _pair(picks, out_dir, suffix), None
+    else:
+        jobs, err = _jobs(Path(args.input), args.output, suffix)
     if err:
         console.print(f"[red]{escape(err)}[/]")
         return 1
+
+    if args.overwrite:
+        jobs = [(inp, inp) for inp, _ in jobs]      # replace sources in place
+    else:
+        clash = next((inp for inp, out in jobs if inp == out), None)
+        if clash:
+            console.print("[red]output would overwrite the source; "
+                          "use --overwrite, a --suffix, or -o[/]")
+            return 1
 
     if args.detector == "ml":          # spinner while the model loads
         try:
@@ -139,10 +173,16 @@ def main(argv: list[str] | None = None) -> int:
             def on_page(done, total, _t=task):
                 progress.update(_t, completed=done, total=total)
 
+            overwrite_this = in_path == out
+            write_path = out.with_name(out.name + ".tmp") if overwrite_this else out
             try:
-                n = run(in_path, out, on_page=on_page, **kw)
+                n = run(in_path, write_path, on_page=on_page, **kw)
+                if overwrite_this:                  # atomic: don't lose the source on failure
+                    os.replace(write_path, out)
                 rows.append((in_path.name, n, out.stat().st_size, True))
             except (MangaPanelsError, ValueError) as e:
+                if overwrite_this:
+                    write_path.unlink(missing_ok=True)
                 progress.console.print(f"[red]FAILED[/] {escape(in_path.name)}: {escape(str(e))}")
                 rows.append((in_path.name, 0, 0, False))
                 failed = True

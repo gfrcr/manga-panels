@@ -24,6 +24,12 @@ def test_hyphen_key_normalized(tmp_path):
     assert load_config(str(cfg)) == {"keep_first": 2}
 
 
+def test_library_and_suffix_keys_accepted(tmp_path):
+    cfg = tmp_path / "c.toml"
+    cfg.write_text('[defaults]\nlibrary = "/mnt/media/manga"\nsuffix = "_cut"\n')
+    assert load_config(str(cfg)) == {"library": "/mnt/media/manga", "suffix": "_cut"}
+
+
 def test_missing_explicit_raises(tmp_path):
     with pytest.raises(MangaPanelsError):
         load_config(str(tmp_path / "nope.toml"))

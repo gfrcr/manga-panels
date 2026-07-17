@@ -32,6 +32,7 @@ Um arquivo por responsabilidade em `src/manga_panels/`:
 | `ml.py` | `MagiDetector` (Magi v2). **Único arquivo com torch/transformers, sempre import lazy.** |
 | `pipeline.py` | `crop_panels()`, `process_archive()` (com `on_page` de progresso). |
 | `preview.py` | `annotate_page()`/`preview_archive()` — desenha os painéis sem cortar (`--preview`). |
+| `browse.py` | `pick_from_library()` — menu numerado que navega a pasta `library` e seleciona arquivos (rodar sem input). |
 | `config.py` | `load_config()` — lê `manga-panels.toml [defaults]`. |
 | `errors.py` | `MangaPanelsError` + `EmptyArchive`/`BadArchive`/`MissingDependency`. |
 | `cli.py` | `main()` / argparse + Rich (progresso, tabela). Console script `manga-panels`. |
