@@ -163,3 +163,15 @@ linha de comando sempre vence o config. Ou aponte um arquivo com `--config`.
 
 Veja **[`manga-panels.example.toml`](manga-panels.example.toml)** com todas as
 opções documentadas — copie pra `manga-panels.toml` e ajuste.
+
+## Licença
+
+O código do manga-panels é **MIT** (veja [LICENSE](LICENSE)) — use, modifique e
+distribua à vontade.
+
+**Atenção ao `--detector ml`:** ele baixa e usa o modelo **Magi v2**
+([ragavsachdeva/magiv2](https://huggingface.co/ragavsachdeva/magiv2)), que tem
+licença **própria e não-comercial** (uso pessoal, pesquisa e sem fins
+lucrativos; comercial exige acordo com o autor). O manga-panels não redistribui
+o modelo — baixa em tempo de execução — mas ao usar `ml` você fica sujeito aos
+termos do Magi. O detector `xycut` (default) não tem essa restrição.
