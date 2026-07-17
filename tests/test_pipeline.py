@@ -161,3 +161,12 @@ def test_cli_preview_writes_preview_cbz(tmp_path):
     assert rc == 0
     assert (tmp_path / "ch_preview.cbz").exists()
     assert not (tmp_path / "ch_panels.cbz").exists()
+
+
+def test_process_archive_on_page_called_per_page(tmp_path):
+    calls = []
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page(), _grid_page()], src)
+    process_archive(src, tmp_path / "o.cbz",
+                    on_page=lambda done, total: calls.append((done, total)))
+    assert calls == [(1, 2), (2, 2)]

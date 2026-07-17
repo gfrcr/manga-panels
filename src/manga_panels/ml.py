@@ -66,3 +66,6 @@ class MagiDetector:
         with torch.no_grad():
             results = model.predict_detections_and_associations([arr])
         return _panels_to_boxes(results[0]["panels"], page.width, page.height)
+
+    def warmup(self) -> None:
+        _load_magi()                  # carrega o singleton (spinner no CLI)
