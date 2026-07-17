@@ -29,6 +29,22 @@ uvx --from . manga-panels --help   # ou rodar sem instalar
 > - Só mudança no `pyproject.toml` (dependências, nome do comando, versão)
 >   ainda pede reinstalar com `--force`, mesmo em editable.
 
+### Rodar com `uv run` (ML sem instalar no global)
+
+Pra usar o ML sem pôr o torch no comando global, sincronize o `.venv` do projeto
+uma vez com **todos os extras** e rode tudo por `uv run`:
+
+```bash
+uv sync --all-extras              # torch + pytest + rarfile no .venv (uma vez)
+uv run manga-panels -o ~/saida    # usa o .venv; abre o menu da library (config)
+uv run pytest -q                  # testes
+```
+
+`uv run` faz sync **inexato** — não remove nada do venv, então o torch fica. Só um
+`uv sync` **parcial** (ex. `uv sync --extra ml` sozinho) faz sync **exato** e
+**poda** os extras que faltarem (foi assim que o `pytest` sumiu). Por isso o
+`--all-extras` no setup: sincronize com tudo de uma vez e depois só `uv run`.
+
 ## Usar
 
 ```bash

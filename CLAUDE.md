@@ -7,7 +7,9 @@ CLI que pega páginas de manga (CBZ/CBR), corta em painéis e reempacota como CB
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"   # base (só xycut)
-uv sync --extra ml --extra dev                               # + detector ML (torch/Magi)
+uv sync --all-extras                                         # + detector ML (torch/Magi) + testes
+# rode via uv run (sync inexato, mantém os extras): `uv run manga-panels ...`
+# NÃO faça `uv sync --extra ml` sozinho: sync exato PODA dev/cbr do .venv
 
 manga-panels capitulo.cbz                    # -> capitulo_panels.cbz
 manga-panels ./pasta -o ./saida              # batch de uma pasta

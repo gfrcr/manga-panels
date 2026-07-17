@@ -33,6 +33,6 @@ packages = ["src/manga_panels"]
 
 [tool.pytest.ini_options]
 markers = [
-    "ml: integracao que precisa do extra [ml] e baixa o modelo Magi (~1.5GB); nao roda por default",
+    "ml: integration test that needs the [ml] extra and downloads the Magi model (~1.5GB); not run by default",
 ]
 addopts = "-m 'not ml' --strict-markers"
