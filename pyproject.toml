@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "manga-panels"
-version = "0.1.0"
+version = "0.2.0"
 description = "Split manga pages into panels and repackage as CBZ"
 requires-python = ">=3.11"
 dependencies = ["pillow>=10", "numpy>=1.24", "rich>=13", "rich-argparse>=1.5"]
