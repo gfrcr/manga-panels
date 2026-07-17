@@ -5,45 +5,35 @@ por página, pra ler confortável em tela pequena.
 
 ## Instalar
 
-```bash
-python3 -m venv .venv && .venv/bin/pip install -e .
-# CBR (opcional): precisa do binario 'unrar' no sistema
-.venv/bin/pip install -e ".[cbr]"
-# detector ML (Magi v2, precisa de GPU pra ser rapido)
-uv sync --extra ml        # ou: pip install "manga-panels[ml]"
-```
-
-Ou rodar como ferramenta sem sujar o ambiente (uv):
+Precisa do [uv](https://docs.astral.sh/uv/). Clone e rode com `uv run` — ele cria
+o ambiente e baixa as dependências sozinho:
 
 ```bash
-uv tool install .            # instala o comando `manga-panels`
-uvx --from . manga-panels --help   # ou rodar sem instalar
+git clone https://github.com/gfrcr/manga-panels
+cd manga-panels
+uv run manga-panels --help
 ```
 
-> **Atualizar depois de editar o repo:**
-> - `uv tool install .` instala uma **cópia** (congela) — precisa
->   `uv tool install . --force` a cada mudança.
-> - `uv tool install -e . --force` instala **editable**: edições em `.py`
->   (inclusive módulos novos) pegam na hora, sem reinstalar. O `--force` é
->   necessário se já houver uma versão instalada (senão o uv não faz nada).
-> - Só mudança no `pyproject.toml` (dependências, nome do comando, versão)
->   ainda pede reinstalar com `--force`, mesmo em editable.
-
-### Rodar com `uv run` (ML sem instalar no global)
-
-Pra usar o ML sem pôr o torch no comando global, sincronize o `.venv` do projeto
-uma vez com **todos os extras** e rode tudo por `uv run`:
+Isso já dá o detector `xycut` (default, leve, sem GPU). Pro detector **ML**
+(Magi v2, precisa de GPU) e os outros extras, sincronize uma vez:
 
 ```bash
-uv sync --all-extras              # torch + pytest + rarfile no .venv (uma vez)
-uv run manga-panels -o ~/saida    # usa o .venv; abre o menu da library (config)
-uv run pytest -q                  # testes
+uv sync --all-extras                             # torch (ML), rarfile (CBR), pytest
+uv run manga-panels --detector ml capitulo.cbz
 ```
 
-`uv run` faz sync **inexato** — não remove nada do venv, então o torch fica. Só um
-`uv sync` **parcial** (ex. `uv sync --extra ml` sozinho) faz sync **exato** e
-**poda** os extras que faltarem (foi assim que o `pytest` sumiu). Por isso o
-`--all-extras` no setup: sincronize com tudo de uma vez e depois só `uv run`.
+> CBR (`.cbr`) também precisa do binário **`unrar`** instalado no sistema.
+
+Prefere o comando `manga-panels` solto, de qualquer pasta (sem `uv run` na
+frente)? Instale como ferramenta do uv:
+
+```bash
+uv tool install "git+https://github.com/gfrcr/manga-panels"                    # xycut
+uv tool install "manga-panels[ml] @ git+https://github.com/gfrcr/manga-panels" # + ML
+```
+
+Os exemplos abaixo mostram `manga-panels` direto — se você foi pelo `uv run`, é
+só prefixar: `uv run manga-panels …`.
 
 ## Usar
 
@@ -163,6 +153,19 @@ linha de comando sempre vence o config. Ou aponte um arquivo com `--config`.
 
 Veja **[`manga-panels.example.toml`](manga-panels.example.toml)** com todas as
 opções documentadas — copie pra `manga-panels.toml` e ajuste.
+
+## Desenvolvimento
+
+```bash
+uv sync --all-extras     # torch + pytest + rarfile no .venv
+uv run pytest -q         # testes (os de ML são pulados por default)
+```
+
+Rode sempre por `uv run` (sync **inexato**, não remove nada do venv). Um
+`uv sync` **parcial** (ex. só `--extra ml`) faz sync exato e **poda** o que
+faltar — por isso o `--all-extras`. Pra hackear o `manga-panels` instalado como
+ferramenta, use `uv tool install -e . --force` (editable: só `.py` pega ao vivo;
+mudança no `pyproject.toml` pede reinstalar).
 
 ## Licença
 
