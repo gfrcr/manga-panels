@@ -20,9 +20,14 @@ uv tool install .            # instala o comando `manga-panels`
 uvx --from . manga-panels --help   # ou rodar sem instalar
 ```
 
-> `uv tool install` **congela** o código: depois de editar o repo, rode
-> `uv tool install . --force` de novo (ou `uv tool install -e .` pra seguir o
-> repo ao vivo).
+> **Atualizar depois de editar o repo:**
+> - `uv tool install .` instala uma **cópia** (congela) — precisa
+>   `uv tool install . --force` a cada mudança.
+> - `uv tool install -e . --force` instala **editable**: edições em `.py`
+>   (inclusive módulos novos) pegam na hora, sem reinstalar. O `--force` é
+>   necessário se já houver uma versão instalada (senão o uv não faz nada).
+> - Só mudança no `pyproject.toml` (dependências, nome do comando, versão)
+>   ainda pede reinstalar com `--force`, mesmo em editable.
 
 ## Usar
 
