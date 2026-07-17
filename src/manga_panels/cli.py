@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 
 from manga_panels.pipeline import process_archive
+from manga_panels.preview import preview_archive
 
 _EXTS = {".cbz", ".cbr", ".zip", ".rar"}
 
@@ -33,6 +34,9 @@ def main(argv: list[str] | None = None) -> int:
     g_out.add_argument("-w", "--max-width", type=int, default=None,
                        help="reduz imagens mais largas que N px (mantem proporcao, "
                             "nunca amplia); ex. 1264. Default: sem limite")
+    g_out.add_argument("--preview", action="store_true",
+                       help="gera <stem>_preview.cbz com os paineis desenhados, "
+                            "sem cortar (pra calibrar)")
 
     g_lay = ap.add_argument_group("layout")
     g_lay.add_argument("--ltr", action="store_true", help="leitura esquerda->direita")
@@ -46,10 +50,17 @@ def main(argv: list[str] | None = None) -> int:
 
     rtl = not args.ltr
     src = Path(args.input)
-    kw = dict(detector=args.detector, rtl=rtl, min_frac=args.min_area,
-              max_ink=args.max_ink, fmt=args.format, quality=args.quality,
-              max_width=args.max_width, page_pos=args.page, keep_first=args.keep_first)
-    suffix = "_panels.cbz"
+    common = dict(detector=args.detector, rtl=rtl, min_frac=args.min_area,
+                  max_ink=args.max_ink, fmt=args.format, quality=args.quality,
+                  max_width=args.max_width)
+    if args.preview:
+        run = preview_archive
+        kw = common
+        suffix = "_preview.cbz"
+    else:
+        run = process_archive
+        kw = {**common, "page_pos": args.page, "keep_first": args.keep_first}
+        suffix = "_panels.cbz"
 
     if src.is_dir():
         out_dir = Path(args.output) if args.output else src.with_name(src.name + "_panels")
@@ -66,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
                 out = out_dir / f"{f.stem}_{f.suffix.lstrip('.')}{suffix}"
             used.add(out)
             try:
-                n = process_archive(f, out, **kw)
+                n = run(f, out, **kw)
             except (NotImplementedError, RuntimeError, ValueError) as e:
                 print(f"{f.name}: erro -> {e}")
                 failed = True
@@ -79,7 +90,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     out = Path(args.output) if args.output else src.with_name(f"{src.stem}{suffix}")
     try:
-        n = process_archive(src, out, **kw)
+        n = run(src, out, **kw)
     except (NotImplementedError, RuntimeError, ValueError) as e:
         print(f"{src.name}: erro -> {e}")
         return 1
