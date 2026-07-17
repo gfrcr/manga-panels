@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from manga_panels.errors import MangaPanelsError
 from manga_panels.pipeline import process_archive
 from manga_panels.preview import preview_archive
 
@@ -78,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
             used.add(out)
             try:
                 n = run(f, out, **kw)
-            except (NotImplementedError, RuntimeError, ValueError) as e:
+            except (MangaPanelsError, ValueError) as e:
                 print(f"{f.name}: erro -> {e}")
                 failed = True
                 continue
@@ -91,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(args.output) if args.output else src.with_name(f"{src.stem}{suffix}")
     try:
         n = run(src, out, **kw)
-    except (NotImplementedError, RuntimeError, ValueError) as e:
+    except (MangaPanelsError, ValueError) as e:
         print(f"{src.name}: erro -> {e}")
         return 1
     print(f"{src.name}: {n} imagens -> {out}")

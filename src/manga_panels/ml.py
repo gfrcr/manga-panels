@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image
 
 from manga_panels.detect import Box
+from manga_panels.errors import MissingDependency
 
 _MODEL_NAME = "ragavsachdeva/magiv2"
 _MODEL = None  # singleton carregado sob demanda
@@ -43,7 +44,7 @@ def _load_magi():
 
             hf_logging.set_verbosity_error()
         except ImportError as e:
-            raise RuntimeError(
+            raise MissingDependency(
                 "detector ml precisa do extra [ml]: uv sync --extra ml "
                 "(ou pip install 'manga-panels[ml]')"
             ) from e

@@ -92,3 +92,22 @@ def test_pack_max_width_none_keeps_size(tmp_path):
     out = tmp_path / "o.cbz"
     pack([im], out)                                # default = sem limite
     assert unpack(out)[0].size == (2000, 1000)
+
+
+def test_unpack_empty_archive_raises(tmp_path):
+    import pytest, zipfile
+    from manga_panels.errors import EmptyArchive
+    cbz = tmp_path / "empty.cbz"
+    with zipfile.ZipFile(cbz, "w") as z:
+        z.writestr("leiame.txt", "sem imagens")
+    with pytest.raises(EmptyArchive):
+        unpack(cbz)
+
+
+def test_unpack_corrupt_archive_raises(tmp_path):
+    import pytest
+    from manga_panels.errors import BadArchive
+    cbz = tmp_path / "bad.cbz"
+    cbz.write_bytes(b"nao sou um zip")
+    with pytest.raises(BadArchive):
+        unpack(cbz)

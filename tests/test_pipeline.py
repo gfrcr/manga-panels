@@ -143,7 +143,8 @@ def test_cli_ml_detector_reports_error_without_raising(tmp_path, monkeypatch):
     import manga_panels.ml as ml
 
     def _boom():
-        raise RuntimeError("detector ml precisa do extra [ml]: uv sync --extra ml")
+        from manga_panels.errors import MissingDependency
+        raise MissingDependency("detector ml precisa do extra [ml]: uv sync --extra ml")
 
     monkeypatch.setattr(ml, "_load_magi", _boom)
     src = tmp_path / "ch.cbz"
