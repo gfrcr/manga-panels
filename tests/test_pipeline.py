@@ -72,6 +72,14 @@ def test_page_pos_after_puts_macro_last(tmp_path):
     assert imgs[0].size != (200, 200)             # painel primeiro
 
 
+def test_process_archive_bad_page_pos_raises(tmp_path):
+    import pytest
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    with pytest.raises(ValueError):
+        process_archive(src, tmp_path / "o.cbz", page_pos="nope")
+
+
 def test_keep_first_keeps_pages_whole(tmp_path):
     src = tmp_path / "ch.cbz"
     pack([_grid_page(), _grid_page()], src)       # 2 paginas de 4 paineis

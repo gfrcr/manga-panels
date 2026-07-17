@@ -15,12 +15,12 @@ def _grid_page():
 
 def test_annotate_page_same_size_and_original_untouched():
     page = _grid_page()
-    before = list(page.getdata())
+    before = page.tobytes()
     boxes = XYCutDetector().detect(page)
     out = annotate_page(page, boxes)
     assert out.size == page.size
-    assert list(page.getdata()) == before          # original intacta
-    assert list(out.getdata()) != before           # anotou algo (desenhou caixas)
+    assert page.tobytes() == before                # original intacta
+    assert out.tobytes() != before                 # anotou algo (desenhou caixas)
 
 
 def test_annotate_page_no_boxes_returns_same_size():

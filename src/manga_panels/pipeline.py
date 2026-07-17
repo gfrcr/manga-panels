@@ -20,6 +20,8 @@ def process_archive(in_path, out_path, *, detector: str = "xycut",
     - keep_first: as primeiras N paginas ficam inteiras (capa/miolo inicial).
     - Pagina com <=1 painel (capa/splash/sem sarjeta) e emitida uma vez so.
     - page_pos: 'before' (macro antes dos paineis), 'after', ou 'off'."""
+    if page_pos not in ("before", "after", "off"):
+        raise ValueError(f"page_pos invalido: {page_pos!r} (use before/after/off)")
     det = get_detector(detector, rtl=rtl, min_frac=min_frac, max_ink=max_ink)
     pages = unpack(in_path)
     out_imgs: list[Image.Image] = []
