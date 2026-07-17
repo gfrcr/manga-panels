@@ -54,6 +54,7 @@ emitida uma vez só (sem duplicar a macro).
 | Flag | Default | O que faz |
 |---|---|---|
 | `-o, --output` | `<stem>_panels.cbz` | arquivo ou pasta de saída |
+| `--config PATH` | `./manga-panels.toml` | TOML `[defaults]` (flag da CLI vence) |
 | `--ltr` | off (RTL) | leitura esquerda→direita |
 | `-d, --detector {xycut,ml}` | `xycut` | detector de painel |
 | `--min-area FLOAT` | `0.02` | fração mínima da área por painel |
@@ -64,6 +65,16 @@ emitida uma vez só (sem duplicar a macro).
 | `--page {before,after,off}` | `before` | posição da página-macro |
 | `-k, --keep-first INT` | `0` | mantém as primeiras N páginas inteiras |
 | `--preview` | off | gera `<stem>_preview.cbz` anotado, sem cortar |
+
+## Saída e erros
+
+- CLI usa **Rich**: barra de progresso (volume + página), spinner no load do
+  modelo ML, tabela-resumo no fim. `rich`/`rich-argparse` são deps base.
+- Falhas conhecidas levantam `MangaPanelsError` (`errors.py`): `EmptyArchive`,
+  `BadArchive`, `MissingDependency`. O CLI captura, imprime a mensagem, e no
+  batch segue pros próximos (exit ≠0 se algum falhou).
+- Config: `config.py::load_config` lê `manga-panels.toml [defaults]` (chaves =
+  dest do argparse); aplicado via `ap.set_defaults` antes do parse.
 
 ## Convenções (importantes ao editar)
 
