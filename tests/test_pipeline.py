@@ -170,3 +170,22 @@ def test_process_archive_on_page_called_per_page(tmp_path):
     process_archive(src, tmp_path / "o.cbz",
                     on_page=lambda done, total: calls.append((done, total)))
     assert calls == [(1, 2), (2, 2)]
+
+
+def test_cli_config_defaults_applied_and_cli_wins(tmp_path):
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    cfg = tmp_path / "manga-panels.toml"
+    cfg.write_text('[defaults]\nformat = "png"\n')
+    # config seta png; sem flag -> saida png
+    out1 = tmp_path / "a.cbz"
+    assert main([str(src), "-o", str(out1), "--config", str(cfg)]) == 0
+    import zipfile
+    with zipfile.ZipFile(out1) as z:
+        assert z.namelist()[0].endswith(".png")
+    # flag na CLI vence o config
+    out2 = tmp_path / "b.cbz"
+    assert main([str(src), "-o", str(out2), "--config", str(cfg), "-f", "jpeg"]) == 0
+    with zipfile.ZipFile(out2) as z:
+        assert z.namelist()[0].endswith(".jpg")
