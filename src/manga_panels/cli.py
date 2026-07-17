@@ -155,10 +155,10 @@ def main(argv: list[str] | None = None) -> int:
                           "use --overwrite, a --suffix, or -o[/]")
             return 1
 
-    if args.detector == "ml":          # spinner while the model loads
+    if args.detector == "ml":          # let HF's own download/loading bars show through
+        console.print("[cyan]Preparing Magi model (first use downloads ~1.5GB)…[/]")
         try:
-            with console.status("[cyan]loading Magi model (first use downloads ~1.5GB)..."):
-                get_detector("ml").warmup()
+            get_detector("ml").warmup()
         except MangaPanelsError as e:
             console.print(f"[red]error:[/] {escape(str(e))}")
             return 1
