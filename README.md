@@ -96,10 +96,16 @@ CBZ com os painéis desenhados e numerados na ordem de leitura, sem cortar.
 manga-panels capitulo.cbz --preview
 ```
 
+Pra ver **tudo** que o Magi entende — painéis, personagens (coloridos por
+identidade), balões coloridos por quem fala e SFX marcado — use `--debug`, que
+gera `<stem>_debug.cbz`. É pra inspeção/QA, não pra ler.
+
 Outras flags (todas em `manga-panels --help`; qualquer uma vence o config):
 
 | flag | o que faz |
 |---|---|
+| `--preview` | `<stem>_preview.cbz` com os painéis desenhados/numerados (confere os cortes) |
+| `--debug` | `<stem>_debug.cbz` com tudo que o Magi vê (personagens, balões, quem fala) |
 | `--page before\|after\|off` | onde entra a página inteira (macro) — default `before` |
 | `--keep-first N` | mantém as N primeiras páginas inteiras (capa/miolo) |
 | `--suffix _cortado` | muda o texto no nome de saída (default `_panels`) |
@@ -120,7 +126,9 @@ manga-panels capitulo.cbz --max-width 1264
 `--max-width N` reduz qualquer imagem mais larga que N px (mantém proporção, nunca
 amplia). Sem ele, mantém a resolução original.
 
-Capa e splash saem inteiras sozinhas (o Magi devolve ≤1 painel), sem duplicar.
+Os cortes já incluem os **balões que vazam** do painel e o **personagem que fala**
+(o Magi detecta texto e personagens, não só o painel). Capa e splash saem inteiras
+sozinhas (≤1 painel), sem duplicar.
 
 ## Desenvolvimento
 

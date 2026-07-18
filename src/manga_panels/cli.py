@@ -14,6 +14,7 @@ from rich_argparse import RichHelpFormatter
 from manga_panels.config import load_config
 from manga_panels.errors import MangaPanelsError
 from manga_panels.ml import MagiDetector
+from manga_panels.debug import debug_archive
 from manga_panels.pipeline import process_archive
 from manga_panels.preview import preview_archive
 
@@ -43,6 +44,8 @@ def _build_parser() -> argparse.ArgumentParser:
                        help="shrink images wider than N px (default: no limit)")
     g_out.add_argument("--preview", action="store_true",
                        help="write <stem>_preview.cbz with the panels drawn, without cropping")
+    g_out.add_argument("--debug", action="store_true",
+                       help="write <stem>_debug.cbz with everything Magi sees (panels, characters, texts, speakers)")
     g_out.add_argument("--suffix", default="_panels",
                        help="text appended to the output name (default _panels)")
     g_out.add_argument("--overwrite", action="store_true",
@@ -111,7 +114,9 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     common = dict(fmt=args.format, quality=args.quality, max_width=args.max_width)
-    if args.preview:
+    if args.debug:
+        run, kw, suffix = debug_archive, common, "_debug.cbz"
+    elif args.preview:
         run, kw, suffix = preview_archive, common, "_preview.cbz"
     else:
         run = process_archive

@@ -32,9 +32,10 @@ suffix = "_panels"
 # Sobrescreve o arquivo original no lugar (DESTRUTIVO; grava num temp e troca).
 overwrite = false
 
-# Sempre gerar preview (painéis desenhados, sem cortar) em vez de processar.
-# Normalmente é melhor usar a flag --preview pontualmente.
+# Sempre gerar preview (painéis desenhados) ou debug (tudo que o Magi vê) em vez
+# de processar. Normalmente é melhor usar as flags --preview/--debug pontualmente.
 # preview = false
+# debug = false
 
 # Saída padrão (arquivo ou pasta). Geralmente melhor passar -o na linha de comando.
 # output = "./saida"

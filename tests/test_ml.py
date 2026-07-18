@@ -35,6 +35,19 @@ def test_panels_to_boxes_gutter_text_goes_to_nearest_panel():
     assert out[1] == (120, 0, 80, 100)               # right panel unchanged
 
 
+def test_panels_to_boxes_keeps_bleeding_character_whole():
+    panels = [[0, 0, 100, 100]]
+    chars = [[60, 60, 120, 120]]                     # ~44% inside -> include fully
+    assert _panels_to_boxes(panels, [], 200, 200, characters=chars) == [(0, 0, 120, 120)]
+
+
+def test_panels_to_boxes_ignores_floating_sfx():
+    panels = [[0, 0, 80, 100]]
+    sfx = [[85, 40, 120, 60]]                        # floating text near the panel
+    assert _panels_to_boxes(panels, sfx, 200, 100, essential=[False]) == [(0, 0, 80, 100)]
+    assert _panels_to_boxes(panels, sfx, 200, 100, essential=[True]) == [(0, 0, 120, 100)]
+
+
 def test_pick_device_priority():
     import types
     def fake(cuda, mps, xpu):

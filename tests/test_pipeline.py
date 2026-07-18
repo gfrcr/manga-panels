@@ -167,6 +167,16 @@ def test_cli_magi_load_failure_reported_without_raising(tmp_path, monkeypatch):
     assert rc != 0
 
 
+def test_cli_debug_writes_debug_cbz(tmp_path):
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    rc = main([str(src), "--debug"])
+    assert rc == 0
+    assert (tmp_path / "ch_debug.cbz").exists()
+    assert not (tmp_path / "ch_panels.cbz").exists()
+
+
 def test_cli_preview_writes_preview_cbz(tmp_path):
     from manga_panels.cli import main
     src = tmp_path / "ch.cbz"
