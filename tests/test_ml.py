@@ -8,17 +8,31 @@ import manga_panels.ml as ml
 def test_panels_to_boxes_converts_xyxy_to_xywh():
     # Magi returns [x1,y1,x2,y2] in pixels, already in reading order
     panels = [[10.0, 20.0, 110.0, 220.0], [0.0, 0.0, 50.0, 50.0]]
-    assert _panels_to_boxes(panels, 200, 300) == [(10, 20, 100, 200), (0, 0, 50, 50)]
+    assert _panels_to_boxes(panels, [], 200, 300) == [(10, 20, 100, 200), (0, 0, 50, 50)]
 
 
 def test_panels_to_boxes_preserves_magi_order():
     panels = [[100, 0, 150, 50], [0, 0, 50, 50]]   # does not reorder
-    assert _panels_to_boxes(panels, 200, 200) == [(100, 0, 50, 50), (0, 0, 50, 50)]
+    assert _panels_to_boxes(panels, [], 200, 200) == [(100, 0, 50, 50), (0, 0, 50, 50)]
 
 
 def test_panels_to_boxes_clamps_and_drops_degenerate():
     panels = [[-5.0, -5.0, 300.0, 400.0], [10.0, 10.0, 10.0, 50.0]]  # 2nd has w=0
-    assert _panels_to_boxes(panels, 200, 300) == [(0, 0, 200, 300)]
+    assert _panels_to_boxes(panels, [], 200, 300) == [(0, 0, 200, 300)]
+
+
+def test_panels_to_boxes_expands_for_overflowing_balloon():
+    panels = [[10, 10, 100, 100]]
+    texts = [[90, 90, 130, 130]]                   # balloon overflows bottom-right
+    assert _panels_to_boxes(panels, texts, 200, 200) == [(10, 10, 120, 120)]
+
+
+def test_panels_to_boxes_gutter_text_goes_to_nearest_panel():
+    panels = [[0, 0, 80, 100], [120, 0, 200, 100]]  # gutter x[80..120]
+    texts = [[85, 40, 110, 60]]                      # floating balloon, overlaps neither
+    out = _panels_to_boxes(panels, texts, 200, 100)
+    assert out[0] == (0, 0, 110, 100)                # nearest (left) panel grew right
+    assert out[1] == (120, 0, 80, 100)               # right panel unchanged
 
 
 def test_pick_device_priority():

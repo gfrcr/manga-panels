@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "manga-panels"
-version = "0.3.1"
+version = "0.4.0"
 description = "Split manga pages into panels and repackage as CBZ"
 license = "MIT"
 license-files = ["LICENSE"]
