@@ -28,7 +28,7 @@ def _build_parser() -> argparse.ArgumentParser:
         formatter_class=RichHelpFormatter,
     )
     ap.add_argument("input", nargs="?",
-                    help="a .cbz/.cbr file or folder (omit to pick from the library)")
+                    help="a .cbz/.cbr/image file or folder (omit to pick from the library)")
     ap.add_argument("-o", "--output", help="output file or folder")
     ap.add_argument("--config", help="TOML defaults (default: ./manga-panels.toml)")
     ap.add_argument("-L", "--library",

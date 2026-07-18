@@ -38,6 +38,14 @@ def test_unpack_natural_sort_non_padded(tmp_path):
     assert reds == [1, 2, 10, 11]
 
 
+def test_unpack_single_image(tmp_path):
+    p = tmp_path / "page.png"
+    Image.new("RGB", (30, 40), (0, 0, 0)).save(p)
+    pages = unpack(p)
+    assert len(pages) == 1
+    assert pages[0].size == (30, 40) and pages[0].mode == "RGB"
+
+
 def test_pack_roundtrip_jpeg_default(tmp_path):
     imgs = [Image.new("RGB", (8, 8), (0, i * 5, 0)) for i in range(4)]
     out = tmp_path / "out.cbz"

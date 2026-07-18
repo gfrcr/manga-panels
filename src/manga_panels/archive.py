@@ -28,6 +28,12 @@ def unpack(path: str | Path) -> list[Image.Image]:
         return _unpack_zip(path)
     if ext == ".cbr" or ext == ".rar":
         return _unpack_rar(path)
+    if ext in _IMG_EXT:                       # a bare image -> single page
+        try:
+            data = path.read_bytes()
+        except OSError as e:
+            raise BadArchive(f"cannot read {path.name}: {e}") from e
+        return [_load(data)]
     raise ValueError(f"unsupported format: {path.suffix}")
 
 
