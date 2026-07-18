@@ -33,6 +33,23 @@ def _panels_to_boxes(panels, page_w: int, page_h: int) -> list[Box]:
     return boxes
 
 
+def _pick_device(torch):
+    """Best available torch device. cuda covers NVIDIA and AMD ROCm builds
+    (ROCm masquerades as cuda); mps is Apple Silicon; xpu is Intel (oneAPI/Arc).
+    Falls back to cpu (which is still usable — a volume is a few minutes)."""
+    if torch.cuda.is_available():
+        return "cuda"
+    mps = getattr(torch.backends, "mps", None)
+    if mps is not None and mps.is_available():
+        import os
+        os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")  # unsupported ops -> cpu
+        return "mps"
+    xpu = getattr(torch, "xpu", None)
+    if xpu is not None and xpu.is_available():
+        return "xpu"
+    return "cpu"
+
+
 def _load_magi():
     """Load Magi v2 once (singleton). Clear error if the [ml] extra is missing."""
     global _MODEL
@@ -51,7 +68,7 @@ def _load_magi():
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             model = AutoModel.from_pretrained(_MODEL_NAME, trust_remote_code=True)
-            model = model.to("cuda" if torch.cuda.is_available() else "cpu").eval()
+            model = model.to(_pick_device(torch)).eval()
         _MODEL = model
     return _MODEL
 

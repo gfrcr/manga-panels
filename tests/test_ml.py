@@ -26,6 +26,19 @@ def test_get_detector_ml_returns_magidetector():
     assert isinstance(get_detector("ml"), ml.MagiDetector)
 
 
+def test_pick_device_priority():
+    import types
+    def fake(cuda, mps, xpu):
+        return types.SimpleNamespace(
+            cuda=types.SimpleNamespace(is_available=lambda: cuda),
+            backends=types.SimpleNamespace(mps=types.SimpleNamespace(is_available=lambda: mps)),
+            xpu=types.SimpleNamespace(is_available=lambda: xpu))
+    assert ml._pick_device(fake(True, True, True)) == "cuda"
+    assert ml._pick_device(fake(False, True, True)) == "mps"
+    assert ml._pick_device(fake(False, False, True)) == "xpu"
+    assert ml._pick_device(fake(False, False, False)) == "cpu"
+
+
 def test_load_magi_missing_deps_raises_missing_dependency(monkeypatch):
     from manga_panels.errors import MissingDependency
     ml._MODEL = None
