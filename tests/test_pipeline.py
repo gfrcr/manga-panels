@@ -152,18 +152,18 @@ def test_cli_bracket_filename_does_not_crash(tmp_path):
     assert (tmp_path / "chapter [c01] [web]_panels.cbz").exists()
 
 
-def test_cli_ml_detector_reports_error_without_raising(tmp_path, monkeypatch):
+def test_cli_magi_load_failure_reported_without_raising(tmp_path, monkeypatch):
     from manga_panels.cli import main
     import manga_panels.ml as ml
 
     def _boom():
         from manga_panels.errors import MissingDependency
-        raise MissingDependency("ml detector needs the [ml] extra: uv sync --extra ml")
+        raise MissingDependency("failed to import torch/transformers")
 
-    monkeypatch.setattr(ml, "_load_magi", _boom)
+    monkeypatch.setattr(ml, "_load_magi", _boom)   # warmup blows up
     src = tmp_path / "ch.cbz"
     pack([_grid_page()], src)
-    rc = main([str(src), "--detector", "ml"])
+    rc = main([str(src)])
     assert rc != 0
 
 

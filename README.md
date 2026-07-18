@@ -3,15 +3,18 @@
 Corta páginas de manga (CBZ/CBR) em **painéis** e reempacota como um CBZ novo —
 um painel por página — pra ler confortável em tela pequena (celular, Kindle).
 
-- Dois detectores: **`xycut`** (leve, sem GPU, bom em grid P&B) e **`ml`**
-  (Magi v2 — resolve páginas de ação/sangradas, precisa de GPU).
-- Leitura **direita→esquerda** por padrão (mangá); `--ltr` pra ocidental.
+- Detecção com **Magi v2**, um modelo transformer treinado em mangá: resolve
+  páginas de ação, sangradas e não-retangulares, não só grid limpo.
+- Ordem de leitura **direita→esquerda** (mangá), vinda do próprio modelo.
 - Configura uma vez, depois é só escolher os volumes num menu.
+
+Escolhe sozinho o melhor device do torch: **CUDA** (NVIDIA), **ROCm** (AMD),
+**XPU** (Intel), **MPS** (Apple) ou **CPU** (uns poucos minutos por volume).
 
 ## Instalar
 
 Precisa do [uv](https://docs.astral.sh/uv/). Clone e rode com `uv run` — ele cria
-o ambiente e baixa as dependências sozinho:
+o ambiente e baixa as dependências (inclui o **torch**, ~2GB) sozinho:
 
 ```bash
 git clone https://github.com/gfrcr/manga-panels
@@ -19,22 +22,20 @@ cd manga-panels
 uv run manga-panels --help
 ```
 
-Isso já dá o detector `xycut` (default, leve, sem GPU). Pro detector **ML**
-(Magi v2, precisa de GPU) e os outros extras, sincronize uma vez:
+No primeiro processamento, o modelo Magi (~1.5GB) é baixado automaticamente.
 
-```bash
-uv sync --all-extras                             # torch (ML), rarfile (CBR), pytest
-uv run manga-panels --detector ml capitulo.cbz
-```
-
-> CBR (`.cbr`) também precisa do binário **`unrar`** instalado no sistema.
+> Pra GPU **AMD/Intel/Apple**, instale o build do torch correspondente
+> (ROCm/XPU/MPS) — o padrão é o build NVIDIA/CUDA. O código usa o que estiver
+> disponível; sem GPU, roda na CPU.
+>
+> CBR (`.cbr`) precisa do binário **`unrar`** no sistema e do extra:
+> `uv sync --extra cbr`.
 
 Prefere o comando `manga-panels` solto, de qualquer pasta (sem `uv run` na
 frente)? Instale como ferramenta do uv:
 
 ```bash
-uv tool install "git+https://github.com/gfrcr/manga-panels"                    # xycut
-uv tool install "manga-panels[ml] @ git+https://github.com/gfrcr/manga-panels" # + ML
+uv tool install "git+https://github.com/gfrcr/manga-panels"
 ```
 
 Os exemplos abaixo mostram `manga-panels` direto — se você foi pelo `uv run`, é
@@ -47,11 +48,10 @@ pasta de onde você roda o comando, ou em `~/.config/manga-panels/config.toml`:
 
 ```toml
 [defaults]
-library   = "/caminho/para/seus/mangas"   # pasta que o menu abre quando você roda sem input
-detector  = "ml"                 # "xycut" (sem GPU) ou "ml" (Magi v2, GPU)
-max_width = 1264                 # largura do seu leitor (1264 = Kindle Paperwhite)
+library   = "/caminho/para/seus/mangas"   # pasta que o menu abre quando roda sem input
+max_width = 1264                          # largura do seu leitor (1264 = Kindle Paperwhite)
 quality   = 85
-page      = "before"             # a página inteira antes dos painéis
+page      = "before"                      # a página inteira antes dos painéis
 ```
 
 Com isso, rode **sem argumentos** e escolha o que processar num menu — ele navega
@@ -100,8 +100,6 @@ Outras flags (todas em `manga-panels --help`; qualquer uma vence o config):
 
 | flag | o que faz |
 |---|---|
-| `--detector ml` | usa o Magi v2 (páginas difíceis; precisa de GPU) |
-| `--ltr` | leitura esquerda→direita (mangá ocidental) |
 | `--page before\|after\|off` | onde entra a página inteira (macro) — default `before` |
 | `--keep-first N` | mantém as N primeiras páginas inteiras (capa/miolo) |
 | `--suffix _cortado` | muda o texto no nome de saída (default `_panels`) |
@@ -122,46 +120,27 @@ manga-panels capitulo.cbz --max-width 1264
 `--max-width N` reduz qualquer imagem mais larga que N px (mantém proporção, nunca
 amplia). Sem ele, mantém a resolução original.
 
-## Calibração (quando o corte sai errado)
-
-Scans reais têm ruído, sarjetas acinzentadas e artefatos de JPEG. Se o `xycut`
-errar os cortes:
-
-- **`--max-ink 0.08`** — o knob mais importante: quanta tinta uma linha/coluna
-  pode ter e ainda contar como sarjeta. **Sobe** (ex. `0.12`) se páginas ficam
-  como um painel só ou não separam painéis lado a lado (screentone/onomatopeia
-  cruzando a sarjeta). **Desce** (ex. `0.04`) se um painel é picado em pedaços.
-- **`--min-area 0.02`** — sobe pra descartar painéis-fantasma pequenos; desce se
-  painéis legítimos somem.
-- Se um capítulo sai como uma página só mesmo subindo `--max-ink`, ele não tinha
-  sarjetas detectáveis — use **`--detector ml`**. O Magi v2 resolve páginas de
-  ação, sangradas e não-retangulares que o `xycut` mescla ou erra (baixa ~1.5GB
-  no 1º uso).
-
-Referência: em FMA Vol.01 (176 páginas), o default antigo (`0.01`) dava 2.3
-painéis/página e deixava várias sem cortar; o atual (`0.08`) dá 3.6/página.
+Capa e splash saem inteiras sozinhas (o Magi devolve ≤1 painel), sem duplicar.
 
 ## Desenvolvimento
 
 ```bash
-uv sync --all-extras     # torch + pytest + rarfile no .venv
-uv run pytest -q         # testes (os de ML são pulados por default)
+uv sync --all-extras     # + pytest e rarfile (cbr) no .venv
+uv run pytest -q         # os testes reais de ML são pulados por default (-m 'not ml')
 ```
 
-Rode sempre por `uv run` (sync **inexato**, não remove nada do venv). Um
-`uv sync` **parcial** (ex. só `--extra ml`) faz sync exato e **poda** o que
-faltar — por isso o `--all-extras`. Pra hackear o `manga-panels` instalado como
-ferramenta, use `uv tool install -e . --force` (editable: só `.py` pega ao vivo;
-mudança no `pyproject.toml` pede reinstalar).
+Rode por `uv run`. Pra hackear o `manga-panels` instalado como ferramenta, use
+`uv tool install -e . --force` (editable: só `.py` pega ao vivo; mudança no
+`pyproject.toml` pede reinstalar).
 
 ## Licença
 
 O código do manga-panels é **MIT** (veja [LICENSE](LICENSE)) — use, modifique e
 distribua à vontade.
 
-**Atenção ao `--detector ml`:** ele baixa e usa o modelo **Magi v2**
+**Atenção:** a detecção usa o modelo **Magi v2**
 ([ragavsachdeva/magiv2](https://huggingface.co/ragavsachdeva/magiv2)), que tem
 licença **própria e não-comercial** (uso pessoal, pesquisa e sem fins
 lucrativos; comercial exige acordo com o autor). O manga-panels não redistribui
-o modelo — baixa em tempo de execução — mas ao usar `ml` você fica sujeito aos
-termos do Magi. O detector `xycut` (default) não tem essa restrição.
+o modelo — baixa em tempo de execução — mas ao usá-lo você fica sujeito aos
+termos do Magi.

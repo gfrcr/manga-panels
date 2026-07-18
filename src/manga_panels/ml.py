@@ -62,8 +62,8 @@ def _load_magi():
             hf_logging.set_verbosity_error()
         except ImportError as e:
             raise MissingDependency(
-                "ml detector needs the [ml] extra: uv sync --extra ml "
-                "(or pip install 'manga-panels[ml]')"
+                "failed to import torch/transformers — reinstall the deps "
+                "with 'uv sync' (or pip install 'manga-panels')"
             ) from e
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

@@ -2,7 +2,7 @@ import zipfile
 import numpy as np
 from PIL import Image
 from manga_panels.preview import annotate_page, preview_archive
-from manga_panels.detect import XYCutDetector
+from manga_panels.ml import MagiDetector
 from manga_panels.archive import pack, unpack
 
 
@@ -16,7 +16,7 @@ def _grid_page():
 def test_annotate_page_same_size_and_original_untouched():
     page = _grid_page()
     before = page.tobytes()
-    boxes = XYCutDetector().detect(page)
+    boxes = MagiDetector().detect(page)            # mocked -> deterministic boxes
     out = annotate_page(page, boxes)
     assert out.size == page.size
     assert page.tobytes() == before                # original untouched

@@ -535,25 +535,15 @@ name = "manga-panels"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "pillow" },
-    { name = "rich" },
-    { name = "rich-argparse" },
-]
-
-[package.optional-dependencies]
-cbr = [
-    { name = "rarfile" },
-]
-dev = [
-    { name = "pytest" },
-]
-ml = [
     { name = "einops" },
     { name = "matplotlib" },
     { name = "networkx" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pillow" },
     { name = "pulp" },
+    { name = "rich" },
+    { name = "rich-argparse" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "sentencepiece" },
@@ -563,26 +553,34 @@ ml = [
     { name = "transformers" },
 ]
 
+[package.optional-dependencies]
+cbr = [
+    { name = "rarfile" },
+]
+dev = [
+    { name = "pytest" },
+]
+
 [package.metadata]
 requires-dist = [
-    { name = "einops", marker = "extra == 'ml'" },
-    { name = "matplotlib", marker = "extra == 'ml'" },
-    { name = "networkx", marker = "extra == 'ml'" },
+    { name = "einops" },
+    { name = "matplotlib" },
+    { name = "networkx" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pillow", specifier = ">=10" },
-    { name = "pulp", marker = "extra == 'ml'" },
+    { name = "pulp" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "rarfile", marker = "extra == 'cbr'", specifier = ">=4" },
     { name = "rich", specifier = ">=13" },
     { name = "rich-argparse", specifier = ">=1.5" },
-    { name = "scipy", marker = "extra == 'ml'" },
-    { name = "sentencepiece", marker = "extra == 'ml'" },
-    { name = "shapely", marker = "extra == 'ml'" },
-    { name = "timm", marker = "extra == 'ml'" },
-    { name = "torch", marker = "extra == 'ml'", specifier = ">=2.3" },
-    { name = "transformers", marker = "extra == 'ml'", specifier = ">=4.40,<5" },
+    { name = "scipy" },
+    { name = "sentencepiece" },
+    { name = "shapely" },
+    { name = "timm" },
+    { name = "torch", specifier = ">=2.3" },
+    { name = "transformers", specifier = ">=4.40,<5" },
 ]
-provides-extras = ["cbr", "dev", "ml"]
+provides-extras = ["cbr", "dev"]
 
 [[package]]
 name = "markdown-it-py"

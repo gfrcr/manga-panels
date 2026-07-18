@@ -11,12 +11,6 @@
 # numerado pra navegar as subpastas e escolher os arquivos.
 # library = "/caminho/para/seus/mangas"
 
-# Detector de painel:
-#   "xycut" (default) — leve, sem GPU, bom em grid P&B limpo.
-#   "ml"              — Magi v2; resolve páginas de ação/sangradas. Precisa do
-#                       extra [ml] e de GPU; baixa ~1.5GB no 1º uso.
-detector = "xycut"
-
 # Encoding das imagens dentro do cbz: "jpeg" (menor) ou "png" (sem perda, ~3x maior).
 format = "jpeg"
 quality = 90            # qualidade jpeg, 1..95 (só vale pra jpeg)
@@ -31,14 +25,6 @@ page = "before"
 
 # Mantém as primeiras N páginas inteiras (capa/folha de rosto), sem cortar.
 keep_first = 0
-
-# Leitura esquerda->direita (mangá ocidental). Default é RTL (direita->esquerda).
-ltr = false
-
-# Calibração do xycut (ignorado no detector ml):
-max_ink = 0.08          # tolerância de tinta na sarjeta; sobe se junta painéis,
-                        # desce se um painel é picado em pedaços.
-min_area = 0.02         # fração mínima da área da página pra algo contar como painel.
 
 # Texto adicionado ao nome de saída (default "_panels" -> capitulo_panels.cbz).
 suffix = "_panels"

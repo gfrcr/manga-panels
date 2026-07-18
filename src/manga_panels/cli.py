@@ -12,8 +12,8 @@ from rich.table import Table
 from rich_argparse import RichHelpFormatter
 
 from manga_panels.config import load_config
-from manga_panels.detect import get_detector
 from manga_panels.errors import MangaPanelsError
+from manga_panels.ml import MagiDetector
 from manga_panels.pipeline import process_archive
 from manga_panels.preview import preview_archive
 
@@ -34,14 +34,6 @@ def _build_parser() -> argparse.ArgumentParser:
     ap.add_argument("-L", "--library",
                     help="folder to browse and pick from when no input is given")
 
-    g_det = ap.add_argument_group("detection")
-    g_det.add_argument("-d", "--detector", default="xycut", choices=["xycut", "ml"],
-                       help="panel detector (default xycut)")
-    g_det.add_argument("--min-area", type=float, default=0.02,
-                       help="minimum page-area fraction per panel (default 0.02)")
-    g_det.add_argument("--max-ink", type=float, default=0.08,
-                       help="(xycut) ink tolerance in the gutter (default 0.08)")
-
     g_out = ap.add_argument_group("output")
     g_out.add_argument("-f", "--format", default="jpeg", choices=["jpeg", "png"],
                        help="image encoding inside the cbz (default jpeg)")
@@ -57,7 +49,6 @@ def _build_parser() -> argparse.ArgumentParser:
                        help="write back over the source file (destructive)")
 
     g_lay = ap.add_argument_group("layout")
-    g_lay.add_argument("--ltr", action="store_true", help="left-to-right reading")
     g_lay.add_argument("--page", choices=["before", "after", "off"], default="before",
                        help="position of the macro page (default before)")
     g_lay.add_argument("-k", "--keep-first", type=int, default=0,
@@ -119,9 +110,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.set_defaults(**cfg)             # config < CLI flag
     args = ap.parse_args(argv)
 
-    common = dict(detector=args.detector, rtl=not args.ltr, min_frac=args.min_area,
-                  max_ink=args.max_ink, fmt=args.format, quality=args.quality,
-                  max_width=args.max_width)
+    common = dict(fmt=args.format, quality=args.quality, max_width=args.max_width)
     if args.preview:
         run, kw, suffix = preview_archive, common, "_preview.cbz"
     else:
@@ -155,13 +144,13 @@ def main(argv: list[str] | None = None) -> int:
                           "use --overwrite, a --suffix, or -o[/]")
             return 1
 
-    if args.detector == "ml":          # let HF's own download/loading bars show through
-        console.print("[cyan]Preparing Magi model (first use downloads ~1.5GB)…[/]")
-        try:
-            get_detector("ml").warmup()
-        except MangaPanelsError as e:
-            console.print(f"[red]error:[/] {escape(str(e))}")
-            return 1
+    # load Magi once up front; let HF's own download/loading bars show through
+    console.print("[cyan]Preparing Magi model (first use downloads ~1.5GB)…[/]")
+    try:
+        MagiDetector().warmup()
+    except MangaPanelsError as e:
+        console.print(f"[red]error:[/] {escape(str(e))}")
+        return 1
 
     rows, failed = [], False
     with Progress(SpinnerColumn(), TextColumn("[bold]{task.description}"), BarColumn(),

@@ -7,9 +7,8 @@ from pathlib import Path
 from manga_panels.errors import MangaPanelsError
 
 # accepted keys = argparse dests
-_KNOWN = {"output", "library", "detector", "min_area", "max_ink", "format",
-          "quality", "max_width", "preview", "ltr", "page", "keep_first",
-          "suffix", "overwrite"}
+_KNOWN = {"output", "library", "format", "quality", "max_width", "preview",
+          "page", "keep_first", "suffix", "overwrite"}
 
 _DISCOVER = [
     Path("manga-panels.toml"),

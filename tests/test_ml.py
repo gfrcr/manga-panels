@@ -2,7 +2,6 @@ import sys
 import pytest
 from PIL import Image
 from manga_panels.ml import _panels_to_boxes
-from manga_panels.detect import get_detector
 import manga_panels.ml as ml
 
 
@@ -22,10 +21,6 @@ def test_panels_to_boxes_clamps_and_drops_degenerate():
     assert _panels_to_boxes(panels, 200, 300) == [(0, 0, 200, 300)]
 
 
-def test_get_detector_ml_returns_magidetector():
-    assert isinstance(get_detector("ml"), ml.MagiDetector)
-
-
 def test_pick_device_priority():
     import types
     def fake(cuda, mps, xpu):
@@ -43,7 +38,7 @@ def test_load_magi_missing_deps_raises_missing_dependency(monkeypatch):
     from manga_panels.errors import MissingDependency
     ml._MODEL = None
     monkeypatch.setitem(sys.modules, "torch", None)   # import torch -> ImportError
-    with pytest.raises(MissingDependency, match="uv sync --extra ml"):
+    with pytest.raises(MissingDependency, match="uv sync"):
         ml._load_magi()
 
 

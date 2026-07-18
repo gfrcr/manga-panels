@@ -1,5 +1,5 @@
 """Preview mode: annotate each page with the detected panels drawn on it (no
-cropping), to calibrate before processing the whole volume."""
+cropping), to check the cuts before processing the whole volume."""
 from __future__ import annotations
 
 from typing import Callable
@@ -7,7 +7,8 @@ from typing import Callable
 from PIL import Image, ImageDraw, ImageFont
 
 from manga_panels.archive import pack, unpack
-from manga_panels.detect import Box, get_detector
+from manga_panels.detect import Box
+from manga_panels.ml import MagiDetector
 
 
 def _font(size: int):
@@ -38,10 +39,10 @@ def annotate_page(page: Image.Image, boxes: list[Box]) -> Image.Image:
     return im
 
 
-def preview_archive(in_path, out_path, *, detector: str = "xycut", rtl: bool = True,
-                    min_frac: float = 0.02, max_ink: float = 0.08, fmt: str = "jpeg",
-                    quality: int = 90, max_width: int | None = None, on_page: Callable[[int, int], None] | None = None) -> int:
-    det = get_detector(detector, rtl=rtl, min_frac=min_frac, max_ink=max_ink)
+def preview_archive(in_path, out_path, *, fmt: str = "jpeg", quality: int = 90,
+                    max_width: int | None = None,
+                    on_page: Callable[[int, int], None] | None = None) -> int:
+    det = MagiDetector()
     pages = unpack(in_path)
     total = len(pages)
     out = []

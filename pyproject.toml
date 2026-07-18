@@ -9,12 +9,11 @@ description = "Split manga pages into panels and repackage as CBZ"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
-dependencies = ["pillow>=10", "numpy>=1.24", "rich>=13", "rich-argparse>=1.5"]
-
-[project.optional-dependencies]
-cbr = ["rarfile>=4"]
-dev = ["pytest>=8"]
-ml = [
+dependencies = [
+    "pillow>=10",
+    "numpy>=1.24",
+    "rich>=13",
+    "rich-argparse>=1.5",
     "torch>=2.3",
     "transformers>=4.40,<5",
     "einops",
@@ -26,6 +25,10 @@ ml = [
     "sentencepiece",
     "timm",
 ]
+
+[project.optional-dependencies]
+cbr = ["rarfile>=4"]
+dev = ["pytest>=8"]
 
 [project.scripts]
 manga-panels = "manga_panels.cli:main"

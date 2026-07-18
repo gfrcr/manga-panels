@@ -6,15 +6,15 @@ import manga_panels.config as config
 
 def test_reads_defaults(tmp_path):
     cfg = tmp_path / "c.toml"
-    cfg.write_text('[defaults]\ndetector = "ml"\nmax_width = 1264\n')
-    assert load_config(str(cfg)) == {"detector": "ml", "max_width": 1264}
+    cfg.write_text('[defaults]\nquality = 80\nmax_width = 1264\n')
+    assert load_config(str(cfg)) == {"quality": 80, "max_width": 1264}
 
 
 def test_unknown_key_ignored_with_warning(tmp_path):
     cfg = tmp_path / "c.toml"
-    cfg.write_text('[defaults]\ndetector = "ml"\nbogus = 1\n')
+    cfg.write_text('[defaults]\nformat = "png"\nbogus = 1\n')
     warned = []
-    assert load_config(str(cfg), warn=warned.append) == {"detector": "ml"}
+    assert load_config(str(cfg), warn=warned.append) == {"format": "png"}
     assert warned                      # warned about the unknown key
 
 

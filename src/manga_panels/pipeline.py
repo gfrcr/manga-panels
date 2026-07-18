@@ -5,28 +5,27 @@ from typing import Callable
 from PIL import Image
 
 from manga_panels.archive import pack, unpack
-from manga_panels.detect import Box, get_detector
+from manga_panels.detect import Box
+from manga_panels.ml import MagiDetector
 
 
 def crop_panels(page: Image.Image, boxes: list[Box]) -> list[Image.Image]:
     return [page.crop((x, y, x + w, y + h)) for (x, y, w, h) in boxes]
 
 
-def process_archive(in_path, out_path, *, detector: str = "xycut",
-                    rtl: bool = True, min_frac: float = 0.02,
-                    max_ink: float = 0.08, fmt: str = "jpeg",
-                    quality: int = 90, page_pos: str = "before",
-                    max_width: int | None = None, keep_first: int = 0,
+def process_archive(in_path, out_path, *, fmt: str = "jpeg", quality: int = 90,
+                    page_pos: str = "before", max_width: int | None = None,
+                    keep_first: int = 0,
                     on_page: Callable[[int, int], None] | None = None) -> int:
     """Explode each page into panels in a new CBZ. Returns the total number of
     images written.
     - keep_first: the first N pages are kept whole (cover/front matter).
-    - A page with <=1 panel (cover/splash/no gutter) is emitted only once.
+    - A page with <=1 panel (cover/splash) is emitted only once.
     - page_pos: 'before' (macro page before the panels), 'after', or 'off'.
     - on_page(done, total): called after each processed page (progress)."""
     if page_pos not in ("before", "after", "off"):
         raise ValueError(f"invalid page_pos: {page_pos!r} (use before/after/off)")
-    det = get_detector(detector, rtl=rtl, min_frac=min_frac, max_ink=max_ink)
+    det = MagiDetector()
     pages = unpack(in_path)
     total = len(pages)
     out_imgs: list[Image.Image] = []
