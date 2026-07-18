@@ -87,6 +87,7 @@ usar a `library`:
 manga-panels capitulo.cbz               # um arquivo -> capitulo_panels.cbz
 manga-panels capitulo.cbz -o saida.cbz  # nome de saída específico
 manga-panels ./capitulos -o ./saida     # pasta inteira (batch)
+manga-panels pagina.png                 # uma imagem solta também vale (1 página)
 ```
 
 Antes de processar um volume todo, **confira os cortes** com `--preview`: gera um
