@@ -4,6 +4,13 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+
+# nunca versionar mangá / saídas processadas
+*.cbz
+*.cbr
+*_preview/
+*_panels/
+*_debug/
 # config pessoal (caminhos locais); não versionar
 manga-panels.toml
 
