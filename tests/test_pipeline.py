@@ -167,6 +167,45 @@ def test_cli_magi_load_failure_reported_without_raising(tmp_path, monkeypatch):
     assert rc != 0
 
 
+def test_cli_batch_continues_past_bad_file(tmp_path):
+    from manga_panels.cli import main
+    src_dir = tmp_path / "in"
+    src_dir.mkdir()
+    pack([_grid_page()], src_dir / "good.cbz")
+    (src_dir / "bad.cbz").write_bytes(b"not a zip")   # will fail to unpack
+    out_dir = tmp_path / "out"
+    rc = main([str(src_dir), "-o", str(out_dir)])
+    assert rc != 0                                     # a file failed
+    assert (out_dir / "good_panels.cbz").exists()      # but the good one got through
+
+
+def test_cli_keyboardinterrupt_exits_clean(tmp_path, monkeypatch):
+    from manga_panels.cli import main
+    import manga_panels.cli as cli
+
+    def _boom(*a, **k):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(cli, "process_archive", _boom)
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    assert main([str(src)]) == 130                     # clean interrupt code, no traceback
+
+
+def test_entry_exits_with_main_return_code(monkeypatch):
+    import signal
+    import pytest
+    import manga_panels.cli as cli
+    monkeypatch.setattr(cli, "main", lambda argv=None: 0)
+    old = signal.getsignal(signal.SIGTERM)
+    try:
+        with pytest.raises(SystemExit) as e:
+            cli._entry()
+        assert e.value.code == 0
+    finally:
+        signal.signal(signal.SIGTERM, old)
+
+
 def test_cli_debug_writes_debug_cbz(tmp_path):
     from manga_panels.cli import main
     src = tmp_path / "ch.cbz"

@@ -121,6 +121,20 @@ def test_unpack_corrupt_archive_raises(tmp_path):
         unpack(cbz)
 
 
+def test_pack_atomic_no_partial_file_on_failure(tmp_path):
+    import pytest
+
+    class _Boom:                                   # an "image" that blows up on save
+        def save(self, *a, **k):
+            raise RuntimeError("boom")
+
+    out = tmp_path / "o.cbz"
+    with pytest.raises(RuntimeError):
+        pack([Image.new("RGB", (4, 4)), _Boom()], out)
+    assert not out.exists()                        # atomic: never a half-written cbz
+    assert not (tmp_path / "o.cbz.tmp").exists()   # temp cleaned up
+
+
 def test_unpack_corrupt_entry_data_raises(tmp_path):
     import io, pytest, zipfile
     from PIL import Image

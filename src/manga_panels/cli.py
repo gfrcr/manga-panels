@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 from pathlib import Path
 
 from rich.console import Console
@@ -158,31 +157,48 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     rows, failed = [], False
-    with Progress(SpinnerColumn(), TextColumn("[bold]{task.description}"), BarColumn(),
-                  MofNCompleteColumn(), TimeElapsedColumn(), console=console) as progress:
-        overall = progress.add_task("volumes", total=len(jobs)) if len(jobs) > 1 else None
-        for in_path, out in jobs:
-            task = progress.add_task(escape(in_path.name), total=None)
+    try:
+        with Progress(SpinnerColumn(), TextColumn("[bold]{task.description}"), BarColumn(),
+                      MofNCompleteColumn(), TimeElapsedColumn(), console=console) as progress:
+            overall = progress.add_task("volumes", total=len(jobs)) if len(jobs) > 1 else None
+            for in_path, out in jobs:
+                task = progress.add_task(escape(in_path.name), total=None)
 
-            def on_page(done, total, _t=task):
-                progress.update(_t, completed=done, total=total)
+                def on_page(done, total, _t=task):
+                    progress.update(_t, completed=done, total=total)
 
-            overwrite_this = in_path == out
-            write_path = out.with_name(out.name + ".tmp") if overwrite_this else out
-            try:
-                n = run(in_path, write_path, on_page=on_page, **kw)
-                if overwrite_this:                  # atomic: don't lose the source on failure
-                    os.replace(write_path, out)
-                rows.append((in_path.name, n, out.stat().st_size, True))
-            except (MangaPanelsError, ValueError) as e:
-                if overwrite_this:
-                    write_path.unlink(missing_ok=True)
-                progress.console.print(f"[red]FAILED[/] {escape(in_path.name)}: {escape(str(e))}")
-                rows.append((in_path.name, 0, 0, False))
-                failed = True
-            progress.remove_task(task)
-            if overall is not None:
-                progress.advance(overall)
+                try:
+                    n = run(in_path, out, on_page=on_page, **kw)   # pack() writes atomically
+                    rows.append((in_path.name, n, out.stat().st_size, True))
+                except Exception as e:              # one bad file doesn't kill the batch
+                    progress.console.print(f"[red]FAILED[/] {escape(in_path.name)}: "
+                                           f"{type(e).__name__}: {escape(str(e))}")
+                    rows.append((in_path.name, 0, 0, False))
+                    failed = True
+                progress.remove_task(task)
+                if overall is not None:
+                    progress.advance(overall)
+    except KeyboardInterrupt:                       # Ctrl+C, or SIGTERM via _entry
+        console.print("\n[yellow]interrupted[/] — finished files kept, the current one discarded")
+        return 130
 
     console.print(_summary(rows))
     return 1 if failed else 0
+
+
+def _sigterm(_signum, _frame):
+    raise KeyboardInterrupt                          # route `kill` through main()'s cleanup
+
+
+def _entry() -> None:
+    """Console-script entry: make `kill` (SIGTERM) exit as cleanly as Ctrl+C.
+    Kept out of main() so tests can call main() without touching signal state."""
+    import signal
+    try:
+        signal.signal(signal.SIGTERM, _sigterm)
+    except (ValueError, OSError):                    # not the main thread -> skip
+        pass
+    try:
+        raise SystemExit(main())
+    except KeyboardInterrupt:
+        raise SystemExit(130)

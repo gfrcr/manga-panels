@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import os
 import re
 import zipfile
 import zlib
@@ -78,7 +79,6 @@ def _unpack_rar(path: Path) -> list[Image.Image]:
 def pack(images: list[Image.Image], out_path: str | Path, *,
          fmt: str = "jpeg", quality: int = 90, max_width: int | None = None) -> None:
     out_path = Path(out_path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
     fmt = fmt.lower()
     if fmt in ("jpg", "jpeg"):
         # jpeg is already compressed: STORED avoids pointless zip recompression
@@ -89,11 +89,21 @@ def pack(images: list[Image.Image], out_path: str | Path, *,
             "png", "PNG", {}, zipfile.ZIP_DEFLATED)
     else:
         raise ValueError(f"unknown image format: {fmt!r}")
-    with zipfile.ZipFile(out_path, "w", compression) as z:
-        for i, img in enumerate(images, start=1):
-            if max_width and img.width > max_width:   # only shrink, never upscale
-                h = round(img.height * max_width / img.width)
-                img = img.resize((max_width, h), Image.LANCZOS)
-            buf = io.BytesIO()
-            img.save(buf, pil_fmt, **save_kw)
-            z.writestr(f"{i:04d}.{ext}", buf.getvalue())
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    # write to a temp then atomically swap: a crash/kill (or error mid-write)
+    # never leaves a half-written, corrupt CBZ at out_path — you get the
+    # complete file or nothing. os.replace is atomic (tmp is in the same dir).
+    tmp = out_path.with_name(out_path.name + ".tmp")
+    try:
+        with zipfile.ZipFile(tmp, "w", compression) as z:
+            for i, img in enumerate(images, start=1):
+                if max_width and img.width > max_width:   # only shrink, never upscale
+                    h = round(img.height * max_width / img.width)
+                    img = img.resize((max_width, h), Image.LANCZOS)
+                buf = io.BytesIO()
+                img.save(buf, pil_fmt, **save_kw)
+                z.writestr(f"{i:04d}.{ext}", buf.getvalue())
+        os.replace(tmp, out_path)
+    except BaseException:                                 # incl. KeyboardInterrupt
+        tmp.unlink(missing_ok=True)
+        raise
