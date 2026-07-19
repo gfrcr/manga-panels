@@ -125,7 +125,21 @@ manga-panels capitulo.cbz --max-width 1264
 ```
 
 `--max-width N` reduz qualquer imagem mais larga que N px (mantém proporção, nunca
-amplia). Sem ele, mantém a resolução original.
+amplia). Sem ele, mantém a resolução original. Use a **largura da tela** do seu
+aparelho:
+
+| dispositivo | tela (px) | `--max-width` |
+|---|---|---|
+| Kindle básico / Kobo Clara / Boox Poke (6", 300 ppi) | 1072×1448 | `1072` |
+| Kindle Paperwhite 11ª (6.8") | 1236×1648 | `1236` |
+| Kindle Paperwhite 12ª / Oasis / Colorsoft, Kobo Libra, Boox Page (7") | 1264×1680 | `1264` |
+| Kobo Sage (8") | 1440×1920 | `1440` |
+| Boox Note Air / reMarkable 2 / Kobo Elipsa (10.3") | 1404×1872 | `1404` |
+| Kindle Scribe (10.2") | 1860×2480 | `1860` |
+| Celular | ~1080–1284 | `1080` |
+
+Valores aproximados (variam por modelo/ano). Na dúvida, `1264` cobre bem a maioria
+dos leitores de 6–7".
 
 Os cortes já incluem os **balões que vazam** do painel e o **personagem que fala**
 (o Magi detecta texto e personagens, não só o painel). Capa e splash saem inteiras

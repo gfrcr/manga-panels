@@ -15,8 +15,13 @@
 format = "jpeg"
 quality = 90            # qualidade jpeg, 1..95 (só vale pra jpeg)
 
-# Reduz imagens mais largas que N px (mantém proporção, nunca amplia).
-# Ex.: 1264 = nativo do Kindle Paperwhite. Sem isso, mantém a resolução original.
+# Reduz imagens mais largas que N px (mantém proporção, nunca amplia). Use a
+# largura da tela do seu aparelho. Sem isso, mantém a resolução original.
+#   1072 = Kindle básico / Kobo Clara / Boox Poke (6")
+#   1236 = Kindle Paperwhite 11ª (6.8")
+#   1264 = Paperwhite 12ª / Oasis / Kobo Libra / Boox Page (7")  <- cobre a maioria
+#   1404 = Boox Note Air / reMarkable 2 / Kobo Elipsa (10.3")
+#   1860 = Kindle Scribe (10.2")
 # max_width = 1264
 
 # Página-macro (a página inteira, pra ver o contexto antes dos painéis):
