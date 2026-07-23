@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "manga-panels"
-version = "0.5.1"
+version = "0.6.0"
 description = "Split manga pages into panels and repackage as CBZ"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -28,6 +28,7 @@ dependencies = [
 
 [project.optional-dependencies]
 cbr = ["rarfile>=4"]
+pdf = ["img2pdf>=0.5"]
 dev = ["pytest>=8"]
 
 [project.scripts]

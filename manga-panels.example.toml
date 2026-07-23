@@ -11,7 +11,8 @@
 # numerado pra navegar as subpastas e escolher os arquivos.
 # library = "/caminho/para/seus/mangas"
 
-# Encoding das imagens dentro do cbz: "jpeg" (menor) ou "png" (sem perda, ~3x maior).
+# Saída: "jpeg"/"png" dentro de um cbz, ou "pdf" (um painel por página; pro Kindle
+# e leitores que só abrem PDF). O pdf precisa do extra: uv sync --extra pdf
 format = "jpeg"
 quality = 90            # qualidade jpeg, 1..95 (só vale pra jpeg)
 

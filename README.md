@@ -114,8 +114,16 @@ Outras flags (todas em `manga-panels --help`; qualquer uma vence o config):
 
 ## Saída: formato e tamanho
 
-A saída é sempre um CBZ (zip de imagens). Default: **JPEG q90** (~1x o tamanho da
-fonte). `--format png` é sem perda mas ~3x maior; ajuste com `--quality 1..95`.
+Default: um **CBZ** (zip de imagens) em **JPEG q90** (~1x o tamanho da fonte).
+`--format png` é sem perda mas ~3x maior; ajuste com `--quality 1..95`.
+
+Pro **Kindle** (e outros leitores que só abrem PDF), use **`--format pdf`**: gera
+um `.pdf` com um painel por página, com o JPEG embutido sem re-comprimir (mesmo
+tamanho do cbz, sem perda extra). Precisa do extra: `uv sync --extra pdf`.
+
+```bash
+manga-panels capitulo.cbz --format pdf --max-width 1264   # pronto pro Kindle
+```
 
 Scans grandes (edições deluxe a 1600px+) geram arquivos pesados. Pra celular ou
 Kindle, reduza com `--max-width`:

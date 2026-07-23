@@ -256,6 +256,17 @@ def test_cli_no_input_uses_library_picker(tmp_path, monkeypatch):
     assert (out_dir / "Vol.01_panels.cbz").exists()
 
 
+def test_cli_format_pdf_writes_pdf(tmp_path):
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    rc = main([str(src), "--format", "pdf"])
+    assert rc == 0
+    out = tmp_path / "ch_panels.pdf"
+    assert out.exists() and out.read_bytes()[:5] == b"%PDF-"
+    assert not (tmp_path / "ch_panels.cbz").exists()
+
+
 def test_cli_custom_suffix(tmp_path):
     from manga_panels.cli import main
     src = tmp_path / "ch.cbz"

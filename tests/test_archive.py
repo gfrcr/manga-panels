@@ -121,6 +121,22 @@ def test_unpack_corrupt_archive_raises(tmp_path):
         unpack(cbz)
 
 
+def test_pack_pdf_output(tmp_path):
+    imgs = [Image.new("RGB", (20, 30), (0, 0, 0)) for _ in range(3)]
+    out = tmp_path / "o.pdf"
+    pack(imgs, out, fmt="pdf")
+    assert out.read_bytes()[:5] == b"%PDF-"        # valid PDF
+    assert not (tmp_path / "o.pdf.tmp").exists()    # atomic, temp cleaned
+
+
+def test_pack_pdf_missing_dep_raises(tmp_path, monkeypatch):
+    import sys, pytest
+    from manga_panels.errors import MissingDependency
+    monkeypatch.setitem(sys.modules, "img2pdf", None)   # import img2pdf -> ImportError
+    with pytest.raises(MissingDependency, match="pdf"):
+        pack([Image.new("RGB", (4, 4))], tmp_path / "o.pdf", fmt="pdf")
+
+
 def test_pack_atomic_no_partial_file_on_failure(tmp_path):
     import pytest
 

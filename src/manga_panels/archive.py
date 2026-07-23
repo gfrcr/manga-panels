@@ -5,6 +5,7 @@ import os
 import re
 import zipfile
 import zlib
+from contextlib import contextmanager
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
@@ -76,10 +77,35 @@ def _unpack_rar(path: Path) -> list[Image.Image]:
     return imgs
 
 
+def _fit(img: Image.Image, max_width: int | None) -> Image.Image:
+    if max_width and img.width > max_width:       # only shrink, never upscale
+        h = round(img.height * max_width / img.width)
+        return img.resize((max_width, h), Image.LANCZOS)
+    return img
+
+
+@contextmanager
+def _atomic(out_path: Path):
+    """Yield a temp path; on success swap it onto out_path atomically, on any
+    failure (incl. KeyboardInterrupt) delete it. So a crash/kill/error mid-write
+    never leaves a half-written, corrupt file — you get the complete file or none."""
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out_path.with_name(out_path.name + ".tmp")   # same dir -> os.replace is atomic
+    try:
+        yield tmp
+        os.replace(tmp, out_path)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+
+
 def pack(images: list[Image.Image], out_path: str | Path, *,
          fmt: str = "jpeg", quality: int = 90, max_width: int | None = None) -> None:
     out_path = Path(out_path)
     fmt = fmt.lower()
+    if fmt == "pdf":                              # a PDF file, one panel per page
+        _pack_pdf(images, out_path, quality=quality, max_width=max_width)
+        return
     if fmt in ("jpg", "jpeg"):
         # jpeg is already compressed: STORED avoids pointless zip recompression
         ext, pil_fmt, save_kw, compression = (
@@ -89,21 +115,29 @@ def pack(images: list[Image.Image], out_path: str | Path, *,
             "png", "PNG", {}, zipfile.ZIP_DEFLATED)
     else:
         raise ValueError(f"unknown image format: {fmt!r}")
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    # write to a temp then atomically swap: a crash/kill (or error mid-write)
-    # never leaves a half-written, corrupt CBZ at out_path — you get the
-    # complete file or nothing. os.replace is atomic (tmp is in the same dir).
-    tmp = out_path.with_name(out_path.name + ".tmp")
-    try:
+    with _atomic(out_path) as tmp:
         with zipfile.ZipFile(tmp, "w", compression) as z:
             for i, img in enumerate(images, start=1):
-                if max_width and img.width > max_width:   # only shrink, never upscale
-                    h = round(img.height * max_width / img.width)
-                    img = img.resize((max_width, h), Image.LANCZOS)
                 buf = io.BytesIO()
-                img.save(buf, pil_fmt, **save_kw)
+                _fit(img, max_width).save(buf, pil_fmt, **save_kw)
                 z.writestr(f"{i:04d}.{ext}", buf.getvalue())
-        os.replace(tmp, out_path)
-    except BaseException:                                 # incl. KeyboardInterrupt
-        tmp.unlink(missing_ok=True)
-        raise
+
+
+def _pack_pdf(images: list[Image.Image], out_path: Path, *,
+              quality: int, max_width: int | None) -> None:
+    """Embed each panel as a PDF page. img2pdf stores the JPEG bytes as-is (no
+    re-encode), so no extra quality loss. For Kindle & other PDF-only readers."""
+    try:
+        import img2pdf
+    except ImportError as e:
+        raise MissingDependency(
+            "PDF output needs the [pdf] extra: uv sync --extra pdf "
+            "(or pip install 'manga-panels[pdf]')"
+        ) from e
+    jpegs = []
+    for img in images:
+        buf = io.BytesIO()
+        _fit(img, max_width).convert("RGB").save(buf, "JPEG", quality=quality)
+        jpegs.append(buf.getvalue())
+    with _atomic(out_path) as tmp:
+        tmp.write_bytes(img2pdf.convert(jpegs))

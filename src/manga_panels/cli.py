@@ -35,8 +35,8 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="folder to browse and pick from when no input is given")
 
     g_out = ap.add_argument_group("output")
-    g_out.add_argument("-f", "--format", default="jpeg", choices=["jpeg", "png"],
-                       help="image encoding inside the cbz (default jpeg)")
+    g_out.add_argument("-f", "--format", default="jpeg", choices=["jpeg", "png", "pdf"],
+                       help="output: jpeg/png inside a cbz, or pdf (default jpeg)")
     g_out.add_argument("-q", "--quality", type=int, default=90,
                        help="jpeg quality 1-95 (default 90)")
     g_out.add_argument("-w", "--max-width", type=int, default=None,
@@ -113,14 +113,15 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     common = dict(fmt=args.format, quality=args.quality, max_width=args.max_width)
+    ext = "pdf" if args.format == "pdf" else "cbz"
     if args.debug:
-        run, kw, suffix = debug_archive, common, "_debug.cbz"
+        run, kw, suffix = debug_archive, common, f"_debug.{ext}"
     elif args.preview:
-        run, kw, suffix = preview_archive, common, "_preview.cbz"
+        run, kw, suffix = preview_archive, common, f"_preview.{ext}"
     else:
         run = process_archive
         kw = {**common, "page_pos": args.page, "keep_first": args.keep_first}
-        suffix = f"{args.suffix}.cbz"
+        suffix = f"{args.suffix}.{ext}"
 
     if args.input is None:
         if not args.library:
@@ -146,6 +147,14 @@ def main(argv: list[str] | None = None) -> int:
         if clash:
             console.print("[red]output would overwrite the source; "
                           "use --overwrite, a --suffix, or -o[/]")
+            return 1
+
+    if args.format == "pdf":                    # fail fast, before loading the model
+        try:
+            import img2pdf  # noqa: F401
+        except ImportError:
+            console.print("[red]error:[/] PDF output needs the [pdf] extra: "
+                          "uv sync --extra pdf")
             return 1
 
     # load Magi once up front; let HF's own download/loading bars show through
