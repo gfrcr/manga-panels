@@ -73,6 +73,10 @@ def _build_parser() -> argparse.ArgumentParser:
                        help="keep the first N pages whole")
     g_lay.add_argument("--cover",
                        help="prepend this image as page 1 (the PDF/library thumbnail)")
+    g_lay.add_argument("--cover-crop", type=float,
+                       help="make the cover from a fraction (0-1) of a wide first page (wraparound)")
+    g_lay.add_argument("--cover-side", choices=["left", "right"], default="left",
+                       help="which side of page 1 the front cover is on (default left)")
     return ap
 
 
@@ -141,7 +145,8 @@ def main(argv: list[str] | None = None) -> int:
     else:
         run = process_archive
         kw = {**common, "page_pos": args.page, "keep_first": args.keep_first,
-              "grayscale": args.grayscale, "gamma": args.gamma, "cover": args.cover}
+              "grayscale": args.grayscale, "gamma": args.gamma, "cover": args.cover,
+              "cover_crop": args.cover_crop, "cover_side": args.cover_side}
         suffix = f"{args.suffix}.{ext}"
 
     if args.input is None:

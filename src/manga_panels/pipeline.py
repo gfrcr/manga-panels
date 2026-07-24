@@ -16,7 +16,7 @@ def crop_panels(page: Image.Image, boxes: list[Box]) -> list[Image.Image]:
 def process_archive(in_path, out_path, *, fmt: str = "jpeg", quality: int = 90,
                     page_pos: str = "before", max_width: int | None = None,
                     keep_first: int = 0, grayscale: bool = False, gamma: float = 1.0,
-                    cover=None,
+                    cover=None, cover_crop: float | None = None, cover_side: str = "left",
                     on_page: Callable[[int, int], None] | None = None) -> int:
     """Explode each page into panels in a new CBZ. Returns the total number of
     images written.
@@ -30,8 +30,14 @@ def process_archive(in_path, out_path, *, fmt: str = "jpeg", quality: int = 90,
     pages = unpack(in_path)
     total = len(pages)
     out_imgs: list[Image.Image] = []
-    if cover is not None:                          # a fixed cover -> PDF page 1 / thumbnail
-        out_imgs.append(load_image(cover))
+    cover_img = load_image(cover) if cover is not None else None
+    if cover_img is None and cover_crop and pages:   # crop the front cover off a wide page 0
+        w, h = pages[0].size
+        cw = max(1, min(w, round(w * cover_crop)))
+        box = (0, 0, cw, h) if cover_side == "left" else (w - cw, 0, w, h)
+        cover_img = pages[0].crop(box)
+    if cover_img is not None:                        # -> PDF page 1 / library thumbnail
+        out_imgs.append(cover_img)
     for i, page in enumerate(pages):
         if i < keep_first:                         # keep front matter whole
             out_imgs.append(page)

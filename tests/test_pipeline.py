@@ -278,6 +278,22 @@ def test_cli_cover(tmp_path):
     assert unpack(tmp_path / "ch_panels.cbz")[0].size == (50, 70)
 
 
+def test_process_archive_cover_crop_from_wide_page(tmp_path):
+    src = tmp_path / "ch.cbz"
+    pack([Image.new("RGB", (200, 100), (0, 0, 0)), _grid_page()], src)
+    out = tmp_path / "out.cbz"
+    process_archive(src, out, cover_crop=0.4)       # left 40% of the wide page 0
+    assert unpack(out)[0].size == (80, 100)
+
+
+def test_process_archive_cover_crop_right_side(tmp_path):
+    src = tmp_path / "ch.cbz"
+    pack([Image.new("RGB", (200, 100), (0, 0, 0)), _grid_page()], src)
+    out = tmp_path / "out.cbz"
+    process_archive(src, out, cover_crop=0.3, cover_side="right")
+    assert unpack(out)[0].size == (60, 100)
+
+
 def test_cli_cover_missing_errors(tmp_path):
     from manga_panels.cli import main
     src = tmp_path / "ch.cbz"

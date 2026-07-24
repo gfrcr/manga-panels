@@ -113,6 +113,7 @@ Outras flags (todas em `manga-panels --help`; qualquer uma vence o config):
 | `--page before\|after\|off` | onde entra a página inteira (macro) — default `before` |
 | `--keep-first N` | mantém as N primeiras páginas inteiras (capa/miolo) |
 | `--cover img.jpg` | põe essa imagem como página 1 — a **thumbnail** do PDF na biblioteca |
+| `--cover-crop 0.4` | tira a capa de uma **página 1 larga** (wraparound): fração da largura; `--cover-side left/right` |
 | `--suffix _cortado` | muda o texto no nome de saída (default `_panels`) |
 | `--overwrite` | sobrescreve o arquivo original no lugar (destrutivo) |
 
@@ -132,6 +133,11 @@ manga-panels capitulo.cbz --format pdf --device paperwhite --grayscale   # pront
 A **capa** (thumbnail na biblioteca do Kindle) é a **página 1** do PDF. Pra usar
 uma imagem específica, `--cover cover.jpg` (ex.: o `cover.jpg` do volume) — ela
 entra inteira como página 1.
+
+Se a página 1 é uma **spread larga** (capa wraparound frente+verso), ela fica
+deitada e vira uma thumbnail ruim. `--cover-crop 0.4` corta a **capa da frente**
+(uma fração da largura) e usa como página 1. Ajuste a fração (menor = mais
+retrato) e `--cover-side left|right` conforme o layout do teu scan.
 
 Scans grandes (edições deluxe a 1600px+) geram arquivos pesados. Pra celular ou
 Kindle, reduza com `--max-width`:
