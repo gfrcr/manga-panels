@@ -15,7 +15,7 @@ def crop_panels(page: Image.Image, boxes: list[Box]) -> list[Image.Image]:
 
 def process_archive(in_path, out_path, *, fmt: str = "jpeg", quality: int = 90,
                     page_pos: str = "before", max_width: int | None = None,
-                    keep_first: int = 0,
+                    keep_first: int = 0, grayscale: bool = False, gamma: float = 1.0,
                     on_page: Callable[[int, int], None] | None = None) -> int:
     """Explode each page into panels in a new CBZ. Returns the total number of
     images written.
@@ -44,5 +44,6 @@ def process_archive(in_path, out_path, *, fmt: str = "jpeg", quality: int = 90,
                     out_imgs.append(page)
         if on_page is not None:
             on_page(i + 1, total)
-    pack(out_imgs, out_path, fmt=fmt, quality=quality, max_width=max_width)
+    pack(out_imgs, out_path, fmt=fmt, quality=quality, max_width=max_width,
+         grayscale=grayscale, gamma=gamma)
     return len(out_imgs)

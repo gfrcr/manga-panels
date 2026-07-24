@@ -121,6 +121,22 @@ def test_unpack_corrupt_archive_raises(tmp_path):
         unpack(cbz)
 
 
+def test_pack_grayscale_stored_as_L(tmp_path):
+    import io, zipfile
+    out = tmp_path / "g.cbz"
+    pack([Image.new("RGB", (10, 10), (200, 50, 50))], out, grayscale=True)
+    with zipfile.ZipFile(out) as z:
+        raw = Image.open(io.BytesIO(z.read(z.namelist()[0])))
+    assert raw.mode == "L"                          # stored grayscale, not RGB
+
+
+def test_eink_gamma_darkens_midtones():
+    from manga_panels.archive import _eink
+    mid = Image.new("L", (4, 4), 128)
+    assert _eink(mid, grayscale=False, gamma=1.8).getpixel((0, 0)) < 128   # darkened
+    assert _eink(mid, grayscale=False, gamma=1.0).getpixel((0, 0)) == 128  # 1.0 = off
+
+
 def test_pack_pdf_output(tmp_path):
     imgs = [Image.new("RGB", (20, 30), (0, 0, 0)) for _ in range(3)]
     out = tmp_path / "o.pdf"

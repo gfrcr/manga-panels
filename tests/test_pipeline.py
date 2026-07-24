@@ -256,6 +256,34 @@ def test_cli_no_input_uses_library_picker(tmp_path, monkeypatch):
     assert (out_dir / "Vol.01_panels.cbz").exists()
 
 
+def test_cli_grayscale_output(tmp_path):
+    import io, zipfile
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    assert main([str(src), "--grayscale"]) == 0
+    with zipfile.ZipFile(tmp_path / "ch_panels.cbz") as z:
+        raw = Image.open(io.BytesIO(z.read(z.namelist()[0])))
+    assert raw.mode == "L"
+
+
+def test_cli_device_resolves_max_width(tmp_path, monkeypatch):
+    from manga_panels.cli import main
+    import manga_panels.cli as cli
+    captured = {}
+
+    def spy(in_path, out, *, on_page=None, **kw):
+        captured.update(kw)
+        pack([Image.new("RGB", (4, 4))], out, fmt=kw.get("fmt", "jpeg"))
+        return 1
+
+    monkeypatch.setattr(cli, "process_archive", spy)
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    assert main([str(src), "--device", "scribe", "--grayscale"]) == 0
+    assert captured["max_width"] == 1860 and captured["grayscale"] is True
+
+
 def test_cli_format_pdf_writes_pdf(tmp_path):
     from manga_panels.cli import main
     src = tmp_path / "ch.cbz"

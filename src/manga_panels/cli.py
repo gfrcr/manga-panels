@@ -18,6 +18,16 @@ from manga_panels.pipeline import process_archive
 from manga_panels.preview import preview_archive
 
 _EXTS = {".cbz", ".cbr", ".zip", ".rar"}
+# screen-width presets for --device (a shortcut for --max-width)
+_DEVICES = {
+    "basic": 1072,       # Kindle basic / Kobo Clara / Boox Poke (6")
+    "pw11": 1236,        # Kindle Paperwhite 11th gen (6.8")
+    "paperwhite": 1264,  # Paperwhite 12th / Oasis / Kobo Libra / Boox Page (7")
+    "sage": 1440,        # Kobo Sage (8")
+    "tablet": 1404,      # Boox Note Air / reMarkable 2 / Kobo Elipsa (10.3")
+    "scribe": 1860,      # Kindle Scribe (10.2")
+    "phone": 1080,
+}
 console = Console()
 
 
@@ -41,6 +51,12 @@ def _build_parser() -> argparse.ArgumentParser:
                        help="jpeg quality 1-95 (default 90)")
     g_out.add_argument("-w", "--max-width", type=int, default=None,
                        help="shrink images wider than N px (default: no limit)")
+    g_out.add_argument("--device", choices=sorted(_DEVICES),
+                       help="preset for --max-width by reader (e.g. paperwhite, scribe)")
+    g_out.add_argument("--grayscale", action="store_true",
+                       help="convert panels to grayscale (smaller, native to e-ink)")
+    g_out.add_argument("--gamma", type=float, default=1.0,
+                       help="darken midtones for e-ink (>1, e.g. 1.8; 1.0 = off)")
     g_out.add_argument("--preview", action="store_true",
                        help="write <stem>_preview.cbz with the panels drawn, without cropping")
     g_out.add_argument("--debug", action="store_true",
@@ -112,7 +128,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.set_defaults(**cfg)             # config < CLI flag
     args = ap.parse_args(argv)
 
-    common = dict(fmt=args.format, quality=args.quality, max_width=args.max_width)
+    # --max-width wins; else fall back to the --device preset
+    max_width = args.max_width if args.max_width is not None else _DEVICES.get(args.device)
+    common = dict(fmt=args.format, quality=args.quality, max_width=max_width)
     ext = "pdf" if args.format == "pdf" else "cbz"
     if args.debug:
         run, kw, suffix = debug_archive, common, f"_debug.{ext}"
@@ -120,7 +138,8 @@ def main(argv: list[str] | None = None) -> int:
         run, kw, suffix = preview_archive, common, f"_preview.{ext}"
     else:
         run = process_archive
-        kw = {**common, "page_pos": args.page, "keep_first": args.keep_first}
+        kw = {**common, "page_pos": args.page, "keep_first": args.keep_first,
+              "grayscale": args.grayscale, "gamma": args.gamma}
         suffix = f"{args.suffix}.{ext}"
 
     if args.input is None:

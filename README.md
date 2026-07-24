@@ -107,6 +107,9 @@ Outras flags (todas em `manga-panels --help`; qualquer uma vence o config):
 |---|---|
 | `--preview` | `<stem>_preview.cbz` com os painéis desenhados/numerados (confere os cortes) |
 | `--debug` | `<stem>_debug.cbz` com tudo que o Magi vê (personagens, balões, quem fala) |
+| `--device paperwhite` | preset de `--max-width` por leitor (`basic`/`pw11`/`paperwhite`/`sage`/`tablet`/`scribe`/`phone`) |
+| `--grayscale` | tons de cinza — menor e nativo do e-ink |
+| `--gamma 1.8` | escurece os meios-tons pro e-ink (mais contraste; `1.0` = off) |
 | `--page before\|after\|off` | onde entra a página inteira (macro) — default `before` |
 | `--keep-first N` | mantém as N primeiras páginas inteiras (capa/miolo) |
 | `--suffix _cortado` | muda o texto no nome de saída (default `_panels`) |
@@ -122,7 +125,7 @@ um `.pdf` com um painel por página, com o JPEG embutido sem re-comprimir (mesmo
 tamanho do cbz, sem perda extra). Precisa do extra: `uv sync --extra pdf`.
 
 ```bash
-manga-panels capitulo.cbz --format pdf --max-width 1264   # pronto pro Kindle
+manga-panels capitulo.cbz --format pdf --device paperwhite --grayscale   # pronto pro Kindle
 ```
 
 Scans grandes (edições deluxe a 1600px+) geram arquivos pesados. Pra celular ou
@@ -147,7 +150,11 @@ aparelho:
 | Celular | ~1080–1284 | `1080` |
 
 Valores aproximados (variam por modelo/ano). Na dúvida, `1264` cobre bem a maioria
-dos leitores de 6–7".
+dos leitores de 6–7". Em vez de decorar o número, use o preset: `--device paperwhite`
+(= `--max-width 1264`), `--device scribe`, etc.
+
+Pra e-ink, `--grayscale` (menor e nativo do e-paper) e `--gamma 1.8` (escurece os
+meios-tons, mais contraste) melhoram a leitura.
 
 Os cortes já incluem os **balões que vazam** do painel e o **personagem que fala**
 (o Magi detecta texto e personagens, não só o painel). Capa e splash saem inteiras

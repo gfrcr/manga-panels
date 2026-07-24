@@ -25,6 +25,15 @@ quality = 90            # qualidade jpeg, 1..95 (só vale pra jpeg)
 #   1860 = Kindle Scribe (10.2")
 # max_width = 1264
 
+# Alternativa ao max_width: preset por leitor (basic/pw11/paperwhite/sage/tablet/
+# scribe/phone). Se max_width também estiver setado, ele vence.
+# device = "paperwhite"
+
+# e-ink: tons de cinza (menor, nativo do e-paper) e gamma pra escurecer os
+# meios-tons (>1 = mais contraste; 1.0 = off). Só afetam a saída processada.
+# grayscale = true
+# gamma = 1.8
+
 # Página-macro (a página inteira, pra ver o contexto antes dos painéis):
 #   "before" (default), "after" ou "off".
 page = "before"

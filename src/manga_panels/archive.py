@@ -84,6 +84,17 @@ def _fit(img: Image.Image, max_width: int | None) -> Image.Image:
     return img
 
 
+def _eink(img: Image.Image, *, grayscale: bool, gamma: float) -> Image.Image:
+    """e-ink tweaks: grayscale (smaller + native to e-paper) and gamma (>1 darkens
+    midtones for punchier contrast; 1.0 = off)."""
+    if grayscale and img.mode != "L":
+        img = img.convert("L")
+    if gamma and gamma != 1.0:
+        lut = [round(255 * (i / 255) ** gamma) for i in range(256)]
+        img = img.point(lut * len(img.getbands()))
+    return img
+
+
 @contextmanager
 def _atomic(out_path: Path):
     """Yield a temp path; on success swap it onto out_path atomically, on any
@@ -100,11 +111,13 @@ def _atomic(out_path: Path):
 
 
 def pack(images: list[Image.Image], out_path: str | Path, *,
-         fmt: str = "jpeg", quality: int = 90, max_width: int | None = None) -> None:
+         fmt: str = "jpeg", quality: int = 90, max_width: int | None = None,
+         grayscale: bool = False, gamma: float = 1.0) -> None:
     out_path = Path(out_path)
     fmt = fmt.lower()
     if fmt == "pdf":                              # a PDF file, one panel per page
-        _pack_pdf(images, out_path, quality=quality, max_width=max_width)
+        _pack_pdf(images, out_path, quality=quality, max_width=max_width,
+                  grayscale=grayscale, gamma=gamma)
         return
     if fmt in ("jpg", "jpeg"):
         # jpeg is already compressed: STORED avoids pointless zip recompression
@@ -119,12 +132,13 @@ def pack(images: list[Image.Image], out_path: str | Path, *,
         with zipfile.ZipFile(tmp, "w", compression) as z:
             for i, img in enumerate(images, start=1):
                 buf = io.BytesIO()
-                _fit(img, max_width).save(buf, pil_fmt, **save_kw)
+                im = _eink(_fit(img, max_width), grayscale=grayscale, gamma=gamma)
+                im.save(buf, pil_fmt, **save_kw)
                 z.writestr(f"{i:04d}.{ext}", buf.getvalue())
 
 
-def _pack_pdf(images: list[Image.Image], out_path: Path, *,
-              quality: int, max_width: int | None) -> None:
+def _pack_pdf(images: list[Image.Image], out_path: Path, *, quality: int,
+              max_width: int | None, grayscale: bool, gamma: float) -> None:
     """Embed each panel as a PDF page. img2pdf stores the JPEG bytes as-is (no
     re-encode), so no extra quality loss. For Kindle & other PDF-only readers."""
     try:
@@ -136,8 +150,11 @@ def _pack_pdf(images: list[Image.Image], out_path: Path, *,
         ) from e
     jpegs = []
     for img in images:
+        im = _eink(_fit(img, max_width), grayscale=grayscale, gamma=gamma)
+        if im.mode not in ("L", "RGB"):
+            im = im.convert("RGB")
         buf = io.BytesIO()
-        _fit(img, max_width).convert("RGB").save(buf, "JPEG", quality=quality)
+        im.save(buf, "JPEG", quality=quality)
         jpegs.append(buf.getvalue())
     with _atomic(out_path) as tmp:
         tmp.write_bytes(img2pdf.convert(jpegs))
