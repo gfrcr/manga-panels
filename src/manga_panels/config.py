@@ -9,7 +9,7 @@ from manga_panels.errors import MangaPanelsError
 # accepted keys = argparse dests
 _KNOWN = {"output", "library", "format", "quality", "max_width", "device",
           "grayscale", "gamma", "preview", "debug", "page", "keep_first",
-          "suffix", "overwrite"}
+          "cover", "suffix", "overwrite"}
 
 _DISCOVER = [
     Path("manga-panels.toml"),

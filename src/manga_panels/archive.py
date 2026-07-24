@@ -46,6 +46,15 @@ def _load(data: bytes) -> Image.Image:
         raise BadArchive(f"invalid image in archive: {e}") from e
 
 
+def load_image(path: str | Path) -> Image.Image:
+    """Load a single image file as RGB (e.g. a --cover). BadArchive on failure."""
+    try:
+        data = Path(path).read_bytes()
+    except OSError as e:
+        raise BadArchive(f"cannot read image {path}: {e}") from e
+    return _load(data)
+
+
 def _unpack_zip(path: Path) -> list[Image.Image]:
     try:
         with zipfile.ZipFile(path) as z:

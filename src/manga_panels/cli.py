@@ -71,6 +71,8 @@ def _build_parser() -> argparse.ArgumentParser:
                        help="position of the macro page (default before)")
     g_lay.add_argument("-k", "--keep-first", type=int, default=0,
                        help="keep the first N pages whole")
+    g_lay.add_argument("--cover",
+                       help="prepend this image as page 1 (the PDF/library thumbnail)")
     return ap
 
 
@@ -139,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         run = process_archive
         kw = {**common, "page_pos": args.page, "keep_first": args.keep_first,
-              "grayscale": args.grayscale, "gamma": args.gamma}
+              "grayscale": args.grayscale, "gamma": args.gamma, "cover": args.cover}
         suffix = f"{args.suffix}.{ext}"
 
     if args.input is None:
@@ -167,6 +169,10 @@ def main(argv: list[str] | None = None) -> int:
             console.print("[red]output would overwrite the source; "
                           "use --overwrite, a --suffix, or -o[/]")
             return 1
+
+    if args.cover and not Path(args.cover).exists():   # fail fast on a bad cover path
+        console.print(f"[red]error:[/] cover not found: {escape(args.cover)}")
+        return 1
 
     if args.format == "pdf":                    # fail fast, before loading the model
         try:

@@ -4,7 +4,7 @@ from typing import Callable
 
 from PIL import Image
 
-from manga_panels.archive import pack, unpack
+from manga_panels.archive import load_image, pack, unpack
 from manga_panels.detect import Box
 from manga_panels.ml import MagiDetector
 
@@ -16,6 +16,7 @@ def crop_panels(page: Image.Image, boxes: list[Box]) -> list[Image.Image]:
 def process_archive(in_path, out_path, *, fmt: str = "jpeg", quality: int = 90,
                     page_pos: str = "before", max_width: int | None = None,
                     keep_first: int = 0, grayscale: bool = False, gamma: float = 1.0,
+                    cover=None,
                     on_page: Callable[[int, int], None] | None = None) -> int:
     """Explode each page into panels in a new CBZ. Returns the total number of
     images written.
@@ -29,6 +30,8 @@ def process_archive(in_path, out_path, *, fmt: str = "jpeg", quality: int = 90,
     pages = unpack(in_path)
     total = len(pages)
     out_imgs: list[Image.Image] = []
+    if cover is not None:                          # a fixed cover -> PDF page 1 / thumbnail
+        out_imgs.append(load_image(cover))
     for i, page in enumerate(pages):
         if i < keep_first:                         # keep front matter whole
             out_imgs.append(page)

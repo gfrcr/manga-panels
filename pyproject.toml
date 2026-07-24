@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "manga-panels"
-version = "0.7.0"
+version = "0.8.0"
 description = "Split manga pages into panels and repackage as CBZ"
 license = "MIT"
 license-files = ["LICENSE"]

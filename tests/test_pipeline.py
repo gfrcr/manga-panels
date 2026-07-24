@@ -256,6 +256,35 @@ def test_cli_no_input_uses_library_picker(tmp_path, monkeypatch):
     assert (out_dir / "Vol.01_panels.cbz").exists()
 
 
+def test_process_archive_cover_is_first_page(tmp_path):
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    cover = tmp_path / "cover.png"
+    Image.new("RGB", (50, 70), (123, 0, 0)).save(cover)
+    out = tmp_path / "out.cbz"
+    n = process_archive(src, out, cover=str(cover), page_pos="off")
+    imgs = unpack(out)
+    assert imgs[0].size == (50, 70)                 # cover is page 1
+    assert n == 5                                   # cover + 4 panels
+
+
+def test_cli_cover(tmp_path):
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    cover = tmp_path / "cover.png"
+    Image.new("RGB", (50, 70), (9, 9, 9)).save(cover)
+    assert main([str(src), "--cover", str(cover)]) == 0
+    assert unpack(tmp_path / "ch_panels.cbz")[0].size == (50, 70)
+
+
+def test_cli_cover_missing_errors(tmp_path):
+    from manga_panels.cli import main
+    src = tmp_path / "ch.cbz"
+    pack([_grid_page()], src)
+    assert main([str(src), "--cover", str(tmp_path / "nope.png")]) != 0
+
+
 def test_cli_grayscale_output(tmp_path):
     import io, zipfile
     from manga_panels.cli import main

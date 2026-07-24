@@ -112,6 +112,7 @@ Outras flags (todas em `manga-panels --help`; qualquer uma vence o config):
 | `--gamma 1.8` | escurece os meios-tons pro e-ink (mais contraste; `1.0` = off) |
 | `--page before\|after\|off` | onde entra a página inteira (macro) — default `before` |
 | `--keep-first N` | mantém as N primeiras páginas inteiras (capa/miolo) |
+| `--cover img.jpg` | põe essa imagem como página 1 — a **thumbnail** do PDF na biblioteca |
 | `--suffix _cortado` | muda o texto no nome de saída (default `_panels`) |
 | `--overwrite` | sobrescreve o arquivo original no lugar (destrutivo) |
 
@@ -127,6 +128,10 @@ tamanho do cbz, sem perda extra). Precisa do extra: `uv sync --extra pdf`.
 ```bash
 manga-panels capitulo.cbz --format pdf --device paperwhite --grayscale   # pronto pro Kindle
 ```
+
+A **capa** (thumbnail na biblioteca do Kindle) é a **página 1** do PDF. Pra usar
+uma imagem específica, `--cover cover.jpg` (ex.: o `cover.jpg` do volume) — ela
+entra inteira como página 1.
 
 Scans grandes (edições deluxe a 1600px+) geram arquivos pesados. Pra celular ou
 Kindle, reduza com `--max-width`:
